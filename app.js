@@ -5,7 +5,54 @@
 
 'use strict';
 
-// ── CODE PROTECTION ─────────────────────────────────
+// ── AGGRESSIVE ANTI‑DEVTOOLS (with custom message) ──
+(function() {
+  function detectDevTools() {
+    // Method 1: window dimension check
+    const widthThreshold  = window.outerWidth - window.innerWidth > 160;
+    const heightThreshold = window.outerHeight - window.innerHeight > 160;
+    if (widthThreshold || heightThreshold) return true;
+
+    // Method 2: console.log with a getter trap
+    const element = new Image();
+    Object.defineProperty(element, 'id', {
+      get: function() { return true; }
+    });
+    console.log(element);
+    if (element.id) return true;
+
+    // Method 3: debugger execution time
+    const start = performance.now();
+    debugger;
+    const end = performance.now();
+    if (end - start > 100) return true; // paused if DevTools open
+
+    return false;
+  }
+
+  function showWarning() {
+    document.documentElement.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#000; color:#ff0000; font-family:monospace; font-size:32px; text-align:center; padding:20px;">
+        FUCK YOU MODDER GO INSPECT YOUR MUM 😏😑😑
+      </div>
+    `;
+    throw new Error('DevTools detected'); // stop further execution
+  }
+
+  // Check immediately
+  if (detectDevTools()) {
+    showWarning();
+  }
+
+  // Keep checking every second (in case DevTools is opened after page load)
+  setInterval(function() {
+    if (detectDevTools()) {
+      showWarning();
+    }
+  }, 1000);
+})();
+
+// ── CODE PROTECTION (additional, but now mostly redundant) ──
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
   const blocked =
@@ -16,19 +63,6 @@ document.addEventListener('keydown', e => {
   if (blocked) { e.preventDefault(); e.stopPropagation(); return false; }
 });
 document.addEventListener('dragstart', e => e.preventDefault());
-
-// Detect DevTools open (basic fingerprint change trick)
-(function devToolsDetect() {
-  const threshold = 160;
-  setInterval(() => {
-    if (
-      window.outerWidth - window.innerWidth > threshold ||
-      window.outerHeight - window.innerHeight > threshold
-    ) {
-      document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#10082A;color:#FF3CAC;font-family:monospace;font-size:18px;flex-direction:column;gap:14px;"><div style="font-size:40px;">🚫</div><div>Developer tools are not permitted.</div><button onclick="location.reload()" style="padding:10px 28px;background:#6C3FD6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;">Return to Site</button></div>`;
-    }
-  }, 1000);
-})();
 
 // ── CONSTANTS ────────────────────────────────────────
 const ADMIN_PW_HASH = btoa('victory2026');  // base64 obfuscation
