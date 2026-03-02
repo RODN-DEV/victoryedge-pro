@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VictoryEdge Pro – Daily Sports Predictions</title>
+<meta name="description" content="Professional football predictions with 87% win rate. Free daily tips + VIP premium picks.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loadOverlay">
+  <div class="load-logo">VictoryEdge Pro</div>
+  <div class="load-spin"></div>
+</div>
+
+<!-- WELCOME MODAL -->
+<div id="welcomeModal">
+  <div class="wbox">
+    <div class="wlogo">VictoryEdge Pro</div>
+    <span style="font-size:50px;display:block;margin:8px 0;">⚽</span>
+    <div class="trial-badge">🎁 3-Day FREE VIP Trial — Active!</div>
+    <p class="wsub">Welcome to the #1 sports prediction platform!<br><strong>Full VIP access FREE for 3 full days.</strong><br>No card needed. Start winning today!</p>
+    <button class="btn-enter" onclick="closeWelcome()">🚀 START WINNING NOW</button>
+    <button class="btn-tg-w" onclick="joinTG()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.269c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.952z"/></svg>
+      Join Our Telegram Channel
+    </button>
+  </div>
+</div>
+
+<!-- TRIAL EXPIRED MODAL -->
+<div id="trialModal">
+  <div class="expbox">
+    <div style="font-size:48px;margin-bottom:9px;">⏰</div>
+    <h2>Trial Expired!</h2>
+    <p>Your 3-day FREE VIP trial has ended. Upgrade now to keep accessing all premium predictions.</p>
+    <button class="bsub" onclick="closeTrialModal()">💎 Upgrade Subscription</button>
+    <button onclick="closeTrialModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;margin-top:9px;font-family:'Nunito',sans-serif;display:block;width:100%;">Continue with Free Plan</button>
+  </div>
+</div>
+
+<!-- TUTORIAL MODAL -->
+<div id="tutModal">
+  <div class="tutbox">
+    <h2>📖 HOW IT WORKS</h2>
+    <p class="tsub">6 steps to start winning today</p>
+    <div class="tut-step"><div class="snum">1</div><div class="sbody"><h4>🎁 3-Day FREE VIP Trial</h4><p>Every new device gets a FREE 3-day full VIP trial — all plans unlocked, no payment needed. Your trial countdown starts the moment you join.</p></div></div>
+    <div class="tut-step"><div class="snum">2</div><div class="sbody"><h4>✅ Browse Daily Free Tips</h4><p>Tap <strong>DAILY FREE TIPS</strong> on the home screen. You'll find 3 carefully selected free picks updated every day.</p></div></div>
+    <div class="tut-step"><div class="snum">3</div><div class="sbody"><h4>💎 Access VIP Picks</h4><p>Tap <strong>VIP ACCESS</strong> then choose Gold, Silver or Diamond tab. Each tab shows exclusive premium picks for that plan level.</p></div></div>
+    <div class="tut-step"><div class="snum">4</div><div class="sbody"><h4>📋 Copy Your Device ID</h4><p>Open the menu (☰), scroll to <em>My Device ID</em>, tap <strong>Copy</strong> and send it to: <a href="https://t.me/master_picks_odds" target="_blank">@master_picks_odds</a> on Telegram.</p></div></div>
+    <div class="tut-step"><div class="snum">5</div><div class="sbody"><h4>💳 Subscribe After Trial</h4><p>After the 3-day trial, choose Gold ($9.99), Silver ($14.99) or Diamond ($24.99). Send Device ID + payment proof to admin for instant activation.</p></div></div>
+    <div class="tut-step"><div class="snum">6</div><div class="sbody"><h4>⭐ Check Winning History</h4><p>Tap <strong>VIP WINNING HISTORY</strong> to see verified past results. Join our <a href="https://t.me/+11ot3EOvrYozNmI8" target="_blank">VIP Channel</a> for live alerts.</p></div></div>
+    <button class="tut-close" onclick="closeTut()">✅ Got It — Let's Win!</button>
+  </div>
+</div>
+
+<!-- NOTIFICATION TOAST -->
+<div id="notif"><span id="notifIcon">⚽</span><span id="notifTxt" style="font-size:12px;font-weight:700;flex:1;"></span><button class="nc" onclick="closeNotif()">✕</button></div>
+
+<!-- SCROLL TO TOP -->
+<button id="sup" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sover" id="sover" onclick="closeSB()"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sb">
+  <button class="sclose" onclick="closeSB()">✕</button>
+  <div class="slogo-sb">VictoryEdge Pro</div>
+  <div id="sbPlanDisplay"></div>
+  <div class="sdiv"></div>
+  <div class="ssect">Navigation</div>
+  <nav class="snav">
+    <a href="#" onclick="showView('home');closeSB();" class="act">🏠 Home</a>
+    <a href="#" onclick="showView('free');closeSB();">✅ Daily Free Tips</a>
+    <a href="#" onclick="showView('vip');closeSB();">💎 VIP Access</a>
+    <a href="#" onclick="showView('history');closeSB();">⭐ Winning History</a>
+    <a href="#" onclick="showView('plans');closeSB();">📋 Subscription Plans</a>
+    <a href="#" onclick="openTut();closeSB();">📖 How It Works</a>
+    <a href="#" onclick="openAdmin();closeSB();">🔐 Admin Panel</a>
+  </nav>
+  <div class="sdiv"></div>
+  <div class="ssect">VIP Trial Timer</div>
+  <div class="timer-sb">
+    <div class="timer-lbl" id="sbTimerLabel">FREE VIP Trial Remaining</div>
+    <div class="timer-big" id="sbTimer">72:00:00</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="ssect">My Device ID</div>
+  <div class="did-box">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Send to admin for premium:</div>
+    <div class="did-val" id="didVal">Loading...</div>
+    <button class="did-copy" onclick="copyDID()">📋 Copy Device ID</button>
+  </div>
+  <div class="sdiv"></div>
+  <div class="ssect">Contact Admin</div>
+  <div class="tg-links">
+    <a class="tgl" href="https://t.me/master_picks_odds" target="_blank"><svg width="15" height="15" viewBox="0 0 24 24" fill="#3CB8FF"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.269c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.952z"/></svg>@master_picks_odds</a>
+    <a class="tgl" href="https://t.me/+11ot3EOvrYozNmI8" target="_blank"><svg width="15" height="15" viewBox="0 0 24 24" fill="#3CB8FF"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.269c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.952z"/></svg>VIP Telegram Channel</a>
+  </div>
+  <div class="sdiv"></div>
+  <div class="ssect">Language</div>
+  <div class="lang-row">
+    <button class="lb act" onclick="setLang('en')">🇬🇧 EN</button>
+    <button class="lb" onclick="setLang('fr')">🇫🇷 FR</button>
+    <button class="lb" onclick="setLang('es')">🇪🇸 ES</button>
+    <button class="lb" onclick="setLang('ar')">🇸🇦 AR</button>
+    <button class="lb" onclick="setLang('sw')">🇰🇪 SW</button>
+  </div>
+  <div class="sdiv"></div>
+  <div class="ssect">Theme</div>
+  <div class="lang-row">
+    <button class="lb" onclick="setTheme('dark')">🌙 Dark</button>
+    <button class="lb" onclick="setTheme('light')">☀️ Light</button>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <span>⚽ Real Madrid vs Getafe — Over 1.5 @ 1.30</span>
+    <span>🔥 Bidco United vs Ulinzi Stars — BTTS Yes @ 2.13</span>
+    <span>💎 Crewe U21 vs Wigan U21 — BTTS Each 2+ @ 2.83</span>
+    <span>⭐ 7-Fold Mega ACCA — Total Odds 15.38</span>
+    <span>✅ Gil Vicente vs Benfica — Away Win @ 1.55</span>
+    <span>🏆 VictoryEdge Pro — 87% Win Rate!</span>
+    <span>⚽ Real Madrid vs Getafe — Over 1.5 @ 1.30</span>
+    <span>🔥 Bidco United vs Ulinzi Stars — BTTS Yes @ 2.13</span>
+    <span>💎 Crewe U21 vs Wigan U21 — BTTS Each 2+ @ 2.83</span>
+    <span>⭐ 7-Fold Mega ACCA — Total Odds 15.38</span>
+    <span>✅ Gil Vicente vs Benfica — Away Win @ 1.55</span>
+    <span>🏆 VictoryEdge Pro — 87% Win Rate!</span>
+  </div>
+</div>
+
+<!-- MAIN NAV -->
+<nav>
+  <div class="nav-in">
+    <div class="logo-nav">VictoryEdge Pro</div>
+    <button class="ib" onclick="setTheme()" id="themeBtn">🌙</button>
+    <a class="ib" href="https://t.me/master_picks_odds" target="_blank">✈️</a>
+    <button class="ib" onclick="openTut()">📖</button>
+    <button class="ib" onclick="openAdmin()">🔐</button>
+    <div class="ham" id="ham" onclick="toggleSB()"><span></span><span></span><span></span></div>
+  </div>
+</nav>
+
+<div style="max-width:900px;margin:0 auto;">
+
+<!-- ═══ HOME VIEW ═══ -->
+<div class="view active" id="view-home">
+  <div class="hero fadein">
+    <div class="hbadges">
+      <div class="hb"><span class="live-dot"></span>Live Predictions</div>
+      <div class="hb">🏆 87% Accuracy</div>
+      <div class="hb">⚡ Daily Updates</div>
+    </div>
+    <div class="hero-title"><span class="l1">VICTORY</span><span class="l2">EDGE PRO</span></div>
+    <p class="hero-sub">Professional football predictions powered by expert data analysis</p>
+
+    <div id="trialStripActive" class="trial-strip">
+      <div class="ts-left">
+        <div class="ts-icon">🎁</div>
+        <div><div class="ts-label">FREE VIP Trial Active!</div><div class="ts-sub">Full access to all premium tips — enjoy!</div></div>
+      </div>
+      <div class="ts-timer" id="heroTimer">72:00:00</div>
+    </div>
+    <div id="trialStripExpired" class="exp-strip hide">
+      <div class="ts-left">
+        <div class="ts-icon">⏰</div>
+        <div><div style="font-weight:800;font-size:13px;color:var(--rd);">Trial Expired</div><div class="ts-sub">Upgrade to keep premium access</div></div>
+      </div>
+      <button class="up-btn" onclick="showView('plans')">Upgrade Now</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="sgrid">
+      <div class="scard"><div class="num">87%</div><div class="lbl">Win Rate</div></div>
+      <div class="scard"><div class="num">1,240+</div><div class="lbl">Tips Posted</div></div>
+      <div class="scard"><div class="num">15K+</div><div class="lbl">Members</div></div>
+      <div class="scard"><div class="num">4.9★</div><div class="lbl">Rating</div></div>
+    </div>
+  </div>
+
+  <div class="main-menu">
+    <button class="mm-btn mm-free" onclick="showView('free')">
+      <span>✅ DAILY FREE TIPS</span><span class="mm-cnt" id="freeCnt">3 picks</span>
+    </button>
+    <button class="mm-btn mm-vip" onclick="showView('vip')">
+      <span>💎 VIP ACCESS</span><span id="vipLock" style="font-size:19px;">🔒</span>
+    </button>
+    <button class="mm-btn mm-hist" onclick="showView('history')">
+      <span>⭐ VIP WINNING HISTORY</span><span class="mm-icon">→</span>
+    </button>
+    <button class="mm-btn mm-plans" onclick="showView('plans')">
+      <span>📋 SUBSCRIPTION PLANS</span><span class="mm-icon">→</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══ FREE TIPS VIEW ═══ -->
+<div class="view" id="view-free">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">✅ FREE <span>TIPS</span></div>
+      <button class="back-btn" onclick="showView('home')">← Home</button>
+    </div>
+    <div class="free-banner">
+      <div class="fb-icon">⚽</div>
+      <div>
+        <div class="fb-title">FREE PICK BET — TODAY</div>
+        <div class="fb-sub">Best selected free picks. Good luck! 🍀</div>
+      </div>
+    </div>
+    <div class="tips-list" id="freeTipsList"></div>
+  </div>
+</div>
+
+<!-- ═══ VIP VIEW ═══ -->
+<div class="view" id="view-vip">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">💎 VIP <span>ACCESS</span></div>
+      <button class="back-btn" onclick="showView('home')">← Home</button>
+    </div>
+    <div class="vip-banner">
+      <div class="vb-icon">🔐</div>
+      <div>
+        <div class="vb-title" id="vipBannerT">Gold, Silver &amp; Diamond exclusive picks</div>
+        <div class="vb-sub" id="vipBannerS">Select a plan tab below</div>
+      </div>
+    </div>
+    <div class="ptabs">
+      <button class="ptab ag" onclick="switchVipTab('gold',this)" id="vtab-gold">🥇 Gold <span class="cnt" id="vcnt-gold">5</span></button>
+      <button class="ptab" onclick="switchVipTab('silver',this)" id="vtab-silver">🥈 Silver <span class="cnt" id="vcnt-silver">5</span></button>
+      <button class="ptab" onclick="switchVipTab('diamond',this)" id="vtab-diamond">💎 Diamond <span class="cnt" id="vcnt-diamond">5</span></button>
+    </div>
+    <div id="vipTipsList"></div>
+  </div>
+</div>
+
+<!-- ═══ HISTORY VIEW ═══ -->
+<div class="view" id="view-history">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">⭐ WINNING <span>HISTORY</span></div>
+      <button class="back-btn" onclick="showView('home')">← Home</button>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(0,230,118,.09),rgba(0,229,255,.04));border:1px solid rgba(0,230,118,.22);border-radius:13px;padding:13px 14px;margin-bottom:16px;display:flex;align-items:center;gap:9px;">
+      <span style="font-size:20px;">🏆</span>
+      <div>
+        <div style="font-weight:900;font-size:13px;color:var(--gr);">Verified Winning Record</div>
+        <div style="font-size:11px;color:var(--muted);">All results independently verified — 87% overall win rate</div>
+      </div>
+    </div>
+    <div class="hist-grid" id="historyGrid"></div>
+  </div>
+</div>
+
+<!-- ═══ PLANS VIEW ═══ -->
+<div class="view" id="view-plans">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">📋 CHOOSE YOUR <span>PLAN</span></div>
+      <button class="back-btn" onclick="showView('home')">← Home</button>
+    </div>
+    <div class="plan-grid">
+      <div class="pcard">
+        <span class="p-icon">🆓</span>
+        <div class="p-name pn-free">FREE</div>
+        <div class="p-price"><sup>$</sup>0<sub>/mo</sub></div>
+        <ul class="p-feats">
+          <li><span class="ck">✓</span>3 free picks/day</li>
+          <li><span class="ck">✓</span>Basic odds</li>
+          <li><span class="cx">✗</span>Premium picks</li>
+          <li><span class="cx">✗</span>Combo slips</li>
+          <li><span class="cx">✗</span>VIP Telegram</li>
+        </ul>
+        <button class="pbtn pb-free-b">Current Free Plan</button>
+      </div>
+      <div class="pcard pop">
+        <span class="p-icon">🥇</span>
+        <div class="p-name pn-gold">GOLD</div>
+        <div class="p-price" style="background:linear-gradient(135deg,var(--gd),var(--gd2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;"><sup>$</sup>9.99<sub>/mo</sub></div>
+        <ul class="p-feats">
+          <li><span class="ck">✓</span>5 gold picks/day</li>
+          <li><span class="ck">✓</span>High-value odds</li>
+          <li><span class="ck">✓</span>Combo slips</li>
+          <li><span class="cx">✗</span>VIP Telegram</li>
+          <li><span class="cx">✗</span>Live alerts</li>
+        </ul>
+        <button class="pbtn pb-gold-b" onclick="subscribePlan('gold')">Get Gold</button>
+      </div>
+      <div class="pcard">
+        <span class="p-icon">🥈</span>
+        <div class="p-name pn-silver">SILVER</div>
+        <div class="p-price" style="background:linear-gradient(135deg,var(--sv),var(--sv2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;"><sup>$</sup>14.99<sub>/mo</sub></div>
+        <ul class="p-feats">
+          <li><span class="ck">✓</span>All Gold features</li>
+          <li><span class="ck">✓</span>VIP Telegram</li>
+          <li><span class="ck">✓</span>Push notifications</li>
+          <li><span class="cx">✗</span>Priority support</li>
+          <li><span class="cx">✗</span>Bankroll coaching</li>
+        </ul>
+        <button class="pbtn pb-silver-b" onclick="subscribePlan('silver')">Get Silver</button>
+      </div>
+      <div class="pcard">
+        <span class="p-icon">💎</span>
+        <div class="p-name pn-diamond">DIAMOND</div>
+        <div class="p-price" style="background:linear-gradient(135deg,var(--pu),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;"><sup>$</sup>24.99<sub>/mo</sub></div>
+        <ul class="p-feats">
+          <li><span class="ck">✓</span>All Silver features</li>
+          <li><span class="ck">✓</span>Mega Accumulator</li>
+          <li><span class="ck">✓</span>Priority support</li>
+          <li><span class="ck">✓</span>Bankroll management</li>
+          <li><span class="ck">✓</span>1-on-1 consultancy</li>
+        </ul>
+        <button class="pbtn pb-diamond-b" onclick="subscribePlan('diamond')">Get Diamond</button>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px dashed var(--pu2);border-radius:14px;padding:18px;margin-top:18px;text-align:center;">
+      <div style="font-weight:900;font-size:15px;margin-bottom:5px;">📋 How to Subscribe</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:14px;">Copy your Device ID from the menu (☰), then message admin with your ID and chosen plan.</p>
+      <a href="https://t.me/master_picks_odds" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:#0088CC;color:#fff;font-weight:800;padding:11px 26px;border-radius:50px;font-size:13px;font-family:'Nunito',sans-serif;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.269c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.952z"/></svg>
+        Contact Admin on Telegram
+      </a>
+    </div>
+  </div>
+</div>
+
+</div><!-- end views wrapper -->
+
+<!-- FOOTER -->
+<footer>
+  <div style="max-width:860px;margin:0 auto;">
+    <div class="flogo">VictoryEdge Pro</div>
+    <div class="ftxt">Gamble responsibly. 18+ only. For entertainment purposes.</div>
+    <div class="ft-links">
+      <a class="ft-link" href="https://t.me/master_picks_odds" target="_blank">✈️ @master_picks_odds</a>
+      <a class="ft-link" href="https://t.me/+11ot3EOvrYozNmI8" target="_blank">📢 VIP Channel</a>
+    </div>
+    <div style="font-size:9px;color:var(--muted);margin-top:6px;font-family:monospace;" id="footerDID"></div>
+  </div>
+</footer>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="abox">
+    <!-- Login -->
+    <div id="aLogin" class="a-login">
+      <div style="font-size:42px;margin-bottom:7px;">🔐</div>
+      <h2>Admin Access</h2>
+      <input type="password" id="aPw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')checkAdmin()">
+      <button class="bsub" style="max-width:300px;" onclick="checkAdmin()">Login</button>
+      <button onclick="closeAdmin()" style="margin-top:9px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;">Cancel</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="aDash" style="display:none;">
+      <div class="ahd">
+        <div class="atitle">⚙️ ADMIN PANEL</div>
+        <button class="aclose" onclick="closeAdmin()">✕</button>
+      </div>
+
+      <!-- Firebase status -->
+      <div id="fbStatus" class="fb-status fb-err">🔴 Firebase not configured</div>
+
+      <div class="atabs">
+        <button class="atab act" onclick="aTab('devices',this)">📱 Devices</button>
+        <button class="atab" onclick="aTab('tips',this)">⚽ Tips</button>
+        <button class="atab" onclick="aTab('history',this)">🏆 History</button>
+        <button class="atab" onclick="aTab('notify',this)">🔔 Notify</button>
+      </div>
+
+      <!-- DEVICES TAB -->
+      <div class="acontent act" id="a-devices">
+        <input class="srch" placeholder="🔍 Search device ID..." id="devSearch" oninput="filterDev()">
+        <div style="overflow-x:auto;">
+          <table class="dtable">
+            <thead><tr><th>Device ID</th><th>Plan</th><th>Trial Left</th><th>Joined</th><th>Save</th></tr></thead>
+            <tbody id="devTbody"></tbody>
+          </table>
+        </div>
+        <button class="bsub" style="margin-top:14px;" onclick="renderDevTable()">🔄 Refresh Devices</button>
+      </div>
+
+      <!-- TIPS TAB -->
+      <div class="acontent" id="a-tips">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:20px;margin-bottom:12px;">Add Tip</h3>
+        <div class="tform">
+          <div class="frow">
+            <div class="fg"><label>Time</label><input type="time" id="tTime" value="13:00"></div>
+            <div class="fg"><label>Country</label><input type="text" id="tCountry" placeholder="Spain 🇪🇸"></div>
+          </div>
+          <div class="fg"><label>Match</label><input type="text" id="tMatch" placeholder="Real Madrid vs Getafe"></div>
+          <div class="frow">
+            <div class="fg"><label>Tip</label>
+              <select id="tTip">
+                <option>FT 1 (Home Win)</option><option>FT 2 (Away Win)</option><option>FT X (Draw)</option>
+                <option>BTTS Yes</option><option>BTTS No</option><option>Over 1.5</option>
+                <option>Over 2.5</option><option>Under 2.5</option><option>DC 1X</option>
+                <option>DC X2</option><option>HT 0.5 Over</option><option>BTTS Each 2+</option>
+              </select>
+            </div>
+            <div class="fg"><label>Odds</label><input type="number" id="tOdds" placeholder="2.50" step="0.01"></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>Plan</label>
+              <select id="tPlan">
+                <option value="free">🆓 Free</option>
+                <option value="gold">🥇 Gold</option>
+                <option value="silver">🥈 Silver</option>
+                <option value="diamond">💎 Diamond</option>
+              </select>
+            </div>
+            <div class="fg"><label>Result</label>
+              <select id="tResult">
+                <option value="pending">Pending</option>
+                <option value="win">Win</option>
+                <option value="lose">Lose</option>
+              </select>
+            </div>
+          </div>
+          <button class="bsub" onclick="addTip()">+ Add Tip</button>
+        </div>
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:18px;margin:20px 0 10px;">Edit Tips</h3>
+        <div id="adminTipList"></div>
+      </div>
+
+      <!-- HISTORY TAB -->
+      <div class="acontent" id="a-history">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:20px;margin-bottom:12px;">Add Win to History</h3>
+        <div class="tform">
+          <div class="frow">
+            <div class="fg"><label>Date</label><input type="date" id="hDate"></div>
+            <div class="fg"><label>League</label><input type="text" id="hLeague" placeholder="Spain La Liga"></div>
+          </div>
+          <div class="fg"><label>Match</label><input type="text" id="hMatch" placeholder="Real Madrid vs Getafe"></div>
+          <div class="frow">
+            <div class="fg"><label>Tip</label><input type="text" id="hTip" placeholder="Over 1.5"></div>
+            <div class="fg"><label>Odds</label><input type="number" id="hOdds" placeholder="1.30" step="0.01"></div>
+          </div>
+          <button class="bsub" onclick="addHistory()">+ Add to History</button>
+        </div>
+        <div id="histAdminList" style="margin-top:14px;"></div>
+      </div>
+
+      <!-- NOTIFY TAB -->
+      <div class="acontent" id="a-notify">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:20px;margin-bottom:12px;">Send Notification</h3>
+        <div class="tform">
+          <div class="fg"><label>Message</label><input type="text" id="notifMsg" placeholder="New VIP tips are live for tonight!"></div>
+          <button class="bsub" onclick="adminSendNotif()">🔔 Broadcast</button>
+        </div>
+        <div style="margin-top:18px;background:var(--card2);border-radius:11px;padding:14px;">
+          <div style="font-weight:900;font-size:13px;margin-bottom:7px;">ℹ️ How Plans Work</div>
+          <p style="font-size:11px;color:var(--muted);line-height:1.7;">
+            1. User visits site → gets a unique <strong>Device ID</strong><br>
+            2. User sends Device ID to you on Telegram<br>
+            3. You find their ID in <strong>Devices tab</strong> above<br>
+            4. Change their plan to Gold / Silver / Diamond<br>
+            5. Hit <strong>💾 Save</strong> — change is instant via Firebase ✅
+          </p>
+        </div>
+      </div>
+
+    </div><!-- /#aDash -->
+  </div><!-- /.abox -->
+</div><!-- /#adminPanel -->
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<!-- App scripts (order matters) -->
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>
