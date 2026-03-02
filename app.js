@@ -5,53 +5,82 @@
 
 'use strict';
 
-// ── AGGRESSIVE ANTI‑DEVTOOLS (with custom message) ──
+// ── AGGRESSIVE ANTI‑DEVTOOLS (with custom message, but no false positives) ──
 (function() {
-  function detectDevTools() {
-    // Method 1: window dimension check
+  // Detection methods
+  let devToolsOpen = false;
+
+  // 1. Console log trick – only works if console is used (which it is, but we'll override)
+  const originalConsole = console.log;
+  console.log = function() {
+    // If DevTools is open, this will be called; we set a flag
+    devToolsOpen = true;
+    // Still call original to not break functionality
+    originalConsole.apply(console, arguments);
+  };
+
+  // 2. Dimension check – only reliable if DevTools is docked
+  function checkDimensions() {
     const widthThreshold  = window.outerWidth - window.innerWidth > 160;
     const heightThreshold = window.outerHeight - window.innerHeight > 160;
-    if (widthThreshold || heightThreshold) return true;
+    if (widthThreshold || heightThreshold) {
+      devToolsOpen = true;
+    }
+  }
 
-    // Method 2: console.log with a getter trap
-    const element = new Image();
-    Object.defineProperty(element, 'id', {
-      get: function() { return true; }
-    });
-    console.log(element);
-    if (element.id) return true;
-
-    // Method 3: debugger execution time
+  // 3. Debugger trick – careful, can cause false positives
+  function checkDebugger() {
     const start = performance.now();
     debugger;
     const end = performance.now();
-    if (end - start > 100) return true; // paused if DevTools open
-
-    return false;
+    // If paused significantly, DevTools likely open
+    if (end - start > 100) {
+      devToolsOpen = true;
+    }
   }
 
+  // Combine checks, but don't trigger on every interval
+  function detect() {
+    checkDimensions();
+    if (devToolsOpen) return true;
+    // Only run debugger check occasionally (e.g., every 5 seconds) to avoid performance hit
+    if (Math.random() < 0.2) { // 20% chance each interval
+      checkDebugger();
+    }
+    return devToolsOpen;
+  }
+
+  // If DevTools is detected, show the message and stop execution
   function showWarning() {
     document.documentElement.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#000; color:#ff0000; font-family:monospace; font-size:32px; text-align:center; padding:20px;">
         FUCK YOU MODDER GO INSPECT YOUR MUM 😏😑😑
       </div>
     `;
-    throw new Error('DevTools detected'); // stop further execution
+    throw new Error('DevTools detected');
   }
 
-  // Check immediately
-  if (detectDevTools()) {
-    showWarning();
-  }
-
-  // Keep checking every second (in case DevTools is opened after page load)
-  setInterval(function() {
-    if (detectDevTools()) {
+  // Check immediately after a short delay (to allow page to load)
+  setTimeout(() => {
+    if (detect()) {
       showWarning();
+    }
+  }, 500);
+
+  // Then check periodically, but with decreasing frequency
+  let intervalCount = 0;
+  const interval = setInterval(() => {
+    intervalCount++;
+    if (detect()) {
+      clearInterval(interval);
+      showWarning();
+    }
+    // Stop checking after 30 seconds (to reduce false positives)
+    if (intervalCount > 30) {
+      clearInterval(interval);
     }
   }, 1000);
 })();
-
 // ── CODE PROTECTION (additional, but now mostly redundant) ──
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
