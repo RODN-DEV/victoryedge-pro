@@ -5,21 +5,17 @@
 
 'use strict';
 
-// ── AGGRESSIVE ANTI‑DEVTOOLS (with custom message, but no false positives) ──
+// ── AGGRESSIVE ANTI‑DEVTOOLS (improved, fewer false positives) ──
 (function() {
-  // Detection methods
   let devToolsOpen = false;
 
-  // 1. Console log trick – only works if console is used (which it is, but we'll override)
+  // Override console.log – if DevTools is open, this will be called
   const originalConsole = console.log;
   console.log = function() {
-    // If DevTools is open, this will be called; we set a flag
     devToolsOpen = true;
-    // Still call original to not break functionality
     originalConsole.apply(console, arguments);
   };
 
-  // 2. Dimension check – only reliable if DevTools is docked
   function checkDimensions() {
     const widthThreshold  = window.outerWidth - window.innerWidth > 160;
     const heightThreshold = window.outerHeight - window.innerHeight > 160;
@@ -28,29 +24,25 @@
     }
   }
 
-  // 3. Debugger trick – careful, can cause false positives
   function checkDebugger() {
     const start = performance.now();
     debugger;
     const end = performance.now();
-    // If paused significantly, DevTools likely open
     if (end - start > 100) {
       devToolsOpen = true;
     }
   }
 
-  // Combine checks, but don't trigger on every interval
   function detect() {
     checkDimensions();
     if (devToolsOpen) return true;
-    // Only run debugger check occasionally (e.g., every 5 seconds) to avoid performance hit
-    if (Math.random() < 0.2) { // 20% chance each interval
+    // Only run debugger check occasionally
+    if (Math.random() < 0.2) {
       checkDebugger();
     }
     return devToolsOpen;
   }
 
-  // If DevTools is detected, show the message and stop execution
   function showWarning() {
     document.documentElement.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#000; color:#ff0000; font-family:monospace; font-size:32px; text-align:center; padding:20px;">
@@ -60,14 +52,14 @@
     throw new Error('DevTools detected');
   }
 
-  // Check immediately after a short delay (to allow page to load)
+  // Initial check after a short delay
   setTimeout(() => {
     if (detect()) {
       showWarning();
     }
   }, 500);
 
-  // Then check periodically, but with decreasing frequency
+  // Periodic checks for a limited time
   let intervalCount = 0;
   const interval = setInterval(() => {
     intervalCount++;
@@ -75,13 +67,13 @@
       clearInterval(interval);
       showWarning();
     }
-    // Stop checking after 30 seconds (to reduce false positives)
     if (intervalCount > 30) {
       clearInterval(interval);
     }
   }, 1000);
 })();
-// ── CODE PROTECTION (additional, but now mostly redundant) ──
+
+// ── ADDITIONAL CODE PROTECTION (keyboard shortcuts, etc.) ──
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
   const blocked =
@@ -94,7 +86,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('dragstart', e => e.preventDefault());
 
 // ── CONSTANTS ────────────────────────────────────────
-const ADMIN_PW_HASH = btoa('victory2026');  // base64 obfuscation
+const ADMIN_PW_HASH = btoa('victory2026');
 const TG_ADMIN      = 'https://t.me/master_picks_odds';
 const TG_CHANNEL    = 'https://t.me/+11ot3EOvrYozNmI8';
 const THREE_DAYS    = 3 * 24 * 60 * 60 * 1000;
@@ -135,10 +127,8 @@ function initFirebase() {
     dbTips    = db.ref('tips');
     dbHistory = db.ref('history');
 
-    // Real-time listeners — update cache when data changes
     dbDevices.on('value', snap => {
       cachedDevices = snap.val() || {};
-      // Re-render if plan for current device changed
       updateSBPlan();
       updateHomeUI();
       updateTimers();
@@ -150,7 +140,6 @@ function initFirebase() {
       const val = snap.val();
       if (val && typeof val === 'object') {
         cachedTips = Object.values(val);
-        // Sort by id descending
         cachedTips.sort((a, b) => b.id - a.id);
       } else {
         cachedTips = [];
@@ -175,22 +164,18 @@ function initFirebase() {
     firebaseReady = true;
     console.log('✅ Firebase connected');
 
-    // Register this device in Firebase if new
     getMyDev();
 
-    // Update Firebase status badge in admin
     const badge = document.getElementById('fbStatus');
     if (badge) { badge.className = 'fb-status fb-ok'; badge.textContent = '🟢 Firebase Connected'; }
 
   } catch (err) {
     console.warn('Firebase error:', err.message);
     firebaseReady = false;
-    // No fallback – show empty data
     cachedTips    = [];
     cachedHistory = [];
     const badge = document.getElementById('fbStatus');
     if (badge) { badge.className = 'fb-status fb-err'; badge.textContent = '🔴 Firebase Offline — fill firebase-config.js'; }
-    // Still boot the app
     getMyDev();
     updateSBPlan();
     updateHomeUI();
@@ -207,7 +192,6 @@ function getTips() {
 function saveTips(tipsArr) {
   cachedTips = tipsArr;
   if (!firebaseReady) return;
-  // Convert array to object keyed by id
   const obj = {};
   tipsArr.forEach(t => { obj[t.id] = t; });
   dbTips.set(obj).catch(e => console.error('saveTips error:', e));
@@ -519,30 +503,24 @@ window.addEventListener('scroll', () =>
 
 // ── INIT ──────────────────────────────────────────────
 (function init() {
-  // Set theme
   const savedTheme = localStorage.getItem('theme') || 'dark';
   setTheme(savedTheme);
 
-  // Show device ID in sidebar
   const didEl = document.getElementById('didVal');
   if (didEl) didEl.textContent = DEVICE_ID;
   const footerDid = document.getElementById('footerDID');
   if (footerDid) footerDid.textContent = 'Device: ' + DEVICE_ID;
 
-  // Start Firebase
   initFirebase();
 
-  // Start timers
   timerInt = setInterval(updateTimers, 1000);
 
-  // Hide loader
   setTimeout(() => {
     const overlay = document.getElementById('loadOverlay');
     if (overlay) overlay.classList.add('done');
     setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 600);
   }, 1200);
 
-  // Welcome notification
   setTimeout(() => {
     showNotif("⚽ Today's picks are live! Tap Daily Free Tips to start.", '⚽');
     pushNotif("Today's predictions are live!");
