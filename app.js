@@ -36,49 +36,6 @@ const TG_ADMIN      = 'https://t.me/master_picks_odds';
 const TG_CHANNEL    = 'https://t.me/+11ot3EOvrYozNmI8';
 const THREE_DAYS    = 3 * 24 * 60 * 60 * 1000;
 
-// ── DEFAULT DATA (shown if Firebase is empty) ────────
-const DEFAULT_TIPS = [
-  {id:1,  time:'23:00', country:'Spain 🇪🇸',      match:'Real Madrid vs Getafe',           tip:'Over 1.5',        odds:'1.30', result:'pending', plan:'free'},
-  {id:2,  time:'19:00', country:'Portugal 🇵🇹',    match:'Gil Vicente vs Benfica',           tip:'FT 2 (Away Win)', odds:'1.55', result:'pending', plan:'free'},
-  {id:3,  time:'19:00', country:'Bulgaria 🇧🇬',    match:'Ludogorets vs Lok. Plovdiv',       tip:'FT 1 (Home Win)', odds:'1.36', result:'pending', plan:'free'},
-  {id:4,  time:'14:00', country:'Kenya 🇰🇪',       match:'Bidco United vs Ulinzi Stars',     tip:'BTTS Yes',        odds:'2.13', result:'pending', plan:'gold'},
-  {id:5,  time:'15:00', country:'Russia 🇷🇺',      match:'Sochi vs Spartak Moscow',          tip:'Over 1.5',        odds:'1.51', result:'pending', plan:'gold'},
-  {id:6,  time:'08:00', country:'South Korea 🇰🇷', match:'Daejeon Hana vs Anyang',           tip:'Over 2 Goals',    odds:'1.39', result:'pending', plan:'gold'},
-  {id:7,  time:'21:00', country:'Sweden 🇸🇪',      match:'Sandviken vs GAIS',                tip:'FT 2 (Away Win)', odds:'1.38', result:'pending', plan:'gold'},
-  {id:8,  time:'20:30', country:'Romania 🇷🇴',     match:'Unirea Slobozia vs FC Rapid',      tip:'FT 2 (Away Win)', odds:'1.40', result:'pending', plan:'gold'},
-  {id:9,  time:'21:45', country:'Saudi Arabia 🇸🇦', match:'Al Draih vs Al-Batin',            tip:'FT 1 (Home Win)', odds:'1.27', result:'pending', plan:'silver'},
-  {id:10, time:'21:45', country:'Saudi Arabia 🇸🇦', match:'Al Jabalain vs Al Zulfi',         tip:'FT 1 (Home Win)', odds:'1.74', result:'pending', plan:'silver'},
-  {id:11, time:'20:00', country:'Turkey 🇹🇷',      match:'Manisa vs Arca Corum',             tip:'Over 2 Goals',    odds:'1.29', result:'pending', plan:'silver'},
-  {id:12, time:'18:30', country:'Italy 🇮🇹',       match:'Udinese vs Fiorentina',            tip:'Over 1.5',        odds:'1.35', result:'pending', plan:'silver'},
-  {id:13, time:'15:00', country:'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿',    match:'Birmingham vs Middlesbrough',       tip:'DC X2',           odds:'1.45', result:'pending', plan:'silver'},
-  {id:14, time:'16:00', country:'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿',    match:'Crewe Alexandra U21 vs Wigan U21', tip:'BTTS Each 2+',    odds:'2.83', result:'pending', plan:'diamond'},
-  {id:15, time:'10:15', country:'Australia 🇦🇺',   match:'Bulleen Lions U23 vs Eltham U23',  tip:'Over 2.5',        odds:'1.21', result:'pending', plan:'diamond'},
-  {id:16, time:'13:00', country:'Turkey 🇹🇷',      match:'Kocaelispor U19 vs Besiktas U19',  tip:'Over 1.5',        odds:'1.23', result:'pending', plan:'diamond'},
-  {id:17, time:'19:30', country:'Russia 🇷🇺',      match:'Rodina Moskva vs Shinnik',         tip:'Over 1.5',        odds:'1.40', result:'pending', plan:'diamond'},
-  {id:18, time:'ACCA',  country:'🌍 Multi',        match:'7-Fold Mega Accumulator',          tip:'Total Odds 15.38',odds:'15.38',result:'pending', plan:'diamond'},
-];
-
-const DEFAULT_HISTORY = [
-  {id:1,  date:'01.03.2026', league:'National League 🇨🇿', match:'Viktoria Zizkov vs MFK Chrudim',         tip:'FT 12',          odds:'1.25', score:'2-1'},
-  {id:2,  date:'01.03.2026', league:'National League 🇨🇿', match:'FC Vlasim vs Taborsko',                  tip:'FT 1 (Home Win)', odds:'2.70', score:'2-1'},
-  {id:3,  date:'01.03.2026', league:'National League 🇨🇿', match:'Banik Ostrava B vs Dynamo C. Bud.',       tip:'DC 1X',           odds:'1.21', score:'2-0'},
-  {id:4,  date:'01.03.2026', league:'Superliga 🇩🇰',       match:'Sonderjyske vs Odense',                  tip:'FT 12',          odds:'1.26', score:'1-0'},
-  {id:5,  date:'01.03.2026', league:'Superliga 🇩🇰',       match:'Vejle vs AGF Aarhus',                    tip:'FT 2 (Away Win)', odds:'1.54', score:'1-2'},
-  {id:6,  date:'01.03.2026', league:'Superliga 🇩🇰',       match:'Viborg vs FC Nordsjaelland',             tip:'FT 12',          odds:'1.26', score:'2-1'},
-  {id:7,  date:'01.03.2026', league:'Ligue 1 🇫🇷',         match:'Paris FC vs Nice',                       tip:'FT 12',          odds:'1.31', score:'1-0'},
-  {id:8,  date:'01.03.2026', league:'Ligue 1 🇫🇷',         match:'Lorient vs Auxerre',                     tip:'DC 1X',           odds:'1.24', score:'2-2'},
-  {id:9,  date:'01.03.2026', league:'Ligue 1 🇫🇷',         match:'Metz vs Brest',                          tip:'FT 2 (Away Win)', odds:'2.19', score:'0-1'},
-  {id:10, date:'01.03.2026', league:'Ligue 1 🇫🇷',         match:'Lille vs Nantes',                        tip:'FT 1 (Home Win)', odds:'1.51', score:'1-0'},
-  {id:11, date:'01.03.2026', league:'Ligue 1 🇫🇷',         match:'Marseille vs Lyonnais',                  tip:'FT 12',          odds:'1.28', score:'3-2'},
-  {id:12, date:'01.03.2026', league:'Liga Mayor 🇸🇻',      match:'Municipal Limeno vs Inter FA Santa Tecla',tip:'DC 1X',          odds:'1.25', score:'2-1'},
-  {id:13, date:'01.03.2026', league:'Liga Mayor 🇸🇻',      match:'Zacatecoluca FC vs Alianza San Salvador', tip:'FT 2 (Away Win)', odds:'1.44', score:'0-2'},
-  {id:14, date:'01.03.2026', league:'Liga Mayor 🇸🇻',      match:'FAS Santa Ana vs Luis Angel Firpo',       tip:'FT 12',          odds:'1.30', score:'2-0'},
-  {id:15, date:'01.03.2026', league:'Liga Mayor 🇸🇻',      match:'Fuerte San Francisco vs Isidro Metapan', tip:'FT 2 (Away Win)', odds:'2.02', score:'1-2'},
-  {id:16, date:'01.03.2026', league:'Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿', match:'Manchester United vs Crystal Palace',  tip:'FT 1 (Home Win)', odds:'1.52', score:'2-1'},
-  {id:17, date:'01.03.2026', league:'Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿', match:'Brighton vs Nottingham',               tip:'FT 12',          odds:'1.29', score:'2-1'},
-  {id:18, date:'01.03.2026', league:'Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿', match:'Chelsea (Away Win)',                   tip:'FT 2 (Away Win)', odds:'1.57', score:'✅ WIN'},
-];
-
 // ── STATE ────────────────────────────────────────────
 let adminLoggedIn  = false;
 let activeVipTab   = 'gold';
@@ -165,12 +122,12 @@ function initFirebase() {
   } catch (err) {
     console.warn('Firebase error:', err.message);
     firebaseReady = false;
-    // Fall back to defaults
-    cachedTips    = DEFAULT_TIPS;
-    cachedHistory = DEFAULT_HISTORY;
+    // No fallback – show empty data
+    cachedTips    = [];
+    cachedHistory = [];
     const badge = document.getElementById('fbStatus');
     if (badge) { badge.className = 'fb-status fb-err'; badge.textContent = '🔴 Firebase Offline — fill firebase-config.js'; }
-    // Still boot the app with defaults
+    // Still boot the app
     getMyDev();
     updateSBPlan();
     updateHomeUI();
@@ -181,11 +138,7 @@ function initFirebase() {
 
 // ── DATA ACCESSORS (sync from cache) ─────────────────
 function getTips() {
-  if (cachedTips.length) {
-    const hasCustm = cachedTips.some(t => t.id > 1000);
-    return hasCustm ? cachedTips : [...DEFAULT_TIPS, ...cachedTips];
-  }
-  return DEFAULT_TIPS;
+  return cachedTips || [];
 }
 
 function saveTips(tipsArr) {
@@ -198,11 +151,7 @@ function saveTips(tipsArr) {
 }
 
 function getHistory() {
-  if (cachedHistory.length) {
-    const hasCustm = cachedHistory.some(h => h.id > 1000);
-    return hasCustm ? cachedHistory : [...DEFAULT_HISTORY, ...cachedHistory];
-  }
-  return DEFAULT_HISTORY;
+  return cachedHistory || [];
 }
 
 function saveHistory(histArr) {
