@@ -29,7 +29,7 @@
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyBGDP2QlZYQg0wUsIWKHyvzGuluzVTNIDE",
   authDomain:        "victoryedge-pro.firebaseapp.com",
-  databaseURL:       "",
+  databaseURL:       "https://victoryedge-pro-default-rtdb.firebaseio.com/",
   projectId:         "victoryedge-pro",
   storageBucket:     "victoryedge-pro.firebasestorage.app",
   messagingSenderId: "362346490085",
