@@ -27,11 +27,11 @@
 // ═══════════════════════════════════════════════════
 
 const FIREBASE_CONFIG = {
-  apiKey:            "REPLACE_WITH_YOUR_API_KEY",
-  authDomain:        "REPLACE_WITH_YOUR_PROJECT.firebaseapp.com",
-  databaseURL:       "https://REPLACE_WITH_YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId:         "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket:     "REPLACE_WITH_YOUR_PROJECT.appspot.com",
-  messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
-  appId:             "REPLACE_WITH_YOUR_APP_ID"
+  apiKey:            "AIzaSyBGDP2QlZYQg0wUsIWKHyvzGuluzVTNIDE",
+  authDomain:        "victoryedge-pro.firebaseapp.com",
+  databaseURL:       "",
+  projectId:         "victoryedge-pro",
+  storageBucket:     "victoryedge-pro.firebasestorage.app",
+  messagingSenderId: "362346490085",
+  appId:             "1:362346490085:web:b1db5eb49feb9eb7068c0c"
 };
