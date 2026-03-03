@@ -5,6 +5,9 @@
 
 'use strict';
 
+// ── EDITING STATE ─────────────────────────────────────
+let editingTipId = null; // stores ID of tip being edited
+
 // ── ADMIN AUTH ────────────────────────────────────────
 function openAdmin() {
   document.getElementById('adminPanel').classList.add('open');
@@ -103,8 +106,14 @@ function filterDev() {
   );
 }
 
-// ── TIPS ADMIN (updated for dropdown + custom) ─────────
+// ── TIPS ADMIN (dropdown + custom + edit) ─────────────
 function addTip() {
+  if (editingTipId !== null) {
+    // If we're in edit mode, treat as update
+    updateTip();
+    return;
+  }
+
   const tips = getTips().filter(t => t.id > 1000); // only custom tips
 
   // Determine which tip value to use: custom input if filled, otherwise dropdown
@@ -145,13 +154,108 @@ function addTip() {
   saveTips(newAll);
   showNotif('✅ Tip added!', '✅');
 
-  // Clear fields
+  clearTipForm();
+}
+
+function clearTipForm() {
   document.getElementById('tTime').value = '';
   document.getElementById('tCountry').value = '';
   document.getElementById('tMatch').value = '';
   document.getElementById('tTipSelect').value = '';
   document.getElementById('tTipCustom').value = '';
   document.getElementById('tOdds').value = '';
+  document.getElementById('tResult').value = 'pending';
+  document.getElementById('tPlan').value = 'free';
+  // Reset button text and editing state
+  const addBtn = document.querySelector('#a-tips .bsub');
+  if (addBtn) {
+    addBtn.textContent = '+ Add Tip';
+    addBtn.setAttribute('onclick', 'addTip()');
+  }
+  editingTipId = null;
+}
+
+function startEditTip(id) {
+  const tips = getTips();
+  const tip = tips.find(t => t.id === id);
+  if (!tip) return;
+
+  // Fill the form with tip data
+  document.getElementById('tTime').value = tip.time || '';
+  document.getElementById('tCountry').value = tip.country || '';
+  document.getElementById('tMatch').value = tip.match || '';
+  document.getElementById('tOdds').value = tip.odds || '';
+  document.getElementById('tResult').value = tip.result || 'pending';
+  document.getElementById('tPlan').value = tip.plan || 'free';
+
+  // Handle tip market: check if it's in the dropdown options
+  const select = document.getElementById('tTipSelect');
+  const custom = document.getElementById('tTipCustom');
+  const options = Array.from(select.options).map(opt => opt.value);
+  if (options.includes(tip.tip)) {
+    select.value = tip.tip;
+    custom.value = '';
+  } else {
+    select.value = '';
+    custom.value = tip.tip;
+  }
+
+  // Change button to "Update Tip"
+  const addBtn = document.querySelector('#a-tips .bsub');
+  addBtn.textContent = '✏️ Update Tip';
+  addBtn.setAttribute('onclick', 'updateTip()');
+
+  editingTipId = id;
+}
+
+function updateTip() {
+  if (editingTipId === null) {
+    showNotif('⚠️ No tip being edited', '⚠️');
+    return;
+  }
+
+  // Get form values
+  let tipValue = document.getElementById('tTipCustom').value.trim();
+  if (!tipValue) {
+    tipValue = document.getElementById('tTipSelect').value;
+    if (!tipValue) {
+      showNotif('⚠️ Please select a market from the list or type one', '⚠️');
+      return;
+    }
+  }
+
+  const updatedTip = {
+    id:      editingTipId,
+    time:    document.getElementById('tTime').value,
+    country: document.getElementById('tCountry').value.trim(),
+    match:   document.getElementById('tMatch').value.trim(),
+    tip:     tipValue,
+    odds:    document.getElementById('tOdds').value,
+    result:  document.getElementById('tResult').value,
+    plan:    document.getElementById('tPlan').value,
+  };
+
+  if (!updatedTip.match || !updatedTip.country || !updatedTip.odds) {
+    showNotif('⚠️ Fill all fields (match, country, odds)', '⚠️');
+    return;
+  }
+
+  // Get all tips, replace the edited one, keep only custom ones
+  const allTips = getTips();
+  const filtered = allTips.filter(t => t.id > 1000); // only custom
+  const index = filtered.findIndex(t => t.id === editingTipId);
+  if (index !== -1) {
+    filtered[index] = updatedTip;
+  } else {
+    // Should not happen, but just in case
+    filtered.push(updatedTip);
+  }
+
+  saveTips(filtered);
+  showNotif('✅ Tip updated!', '✅');
+
+  clearTipForm();
+  renderAdminTips(); // refresh list
 }
 
 function renderAdminTips() {
@@ -173,14 +277,52 @@ function renderAdminTips() {
         <option value="win"${tip.result==='win'?' selected':''}>Win</option>
         <option value="lose"${tip.result==='lose'?' selected':''}>Lose</option>
       </select>
+      <button class="sav-btn" onclick="startEditTip(${tip.id})">✏️ Edit</button>
       <button class="del-btn" onclick="delTip(${tip.id})">🗑</button>
     </div>`).join('');
 }
 
+// ── UPDATED: When result changes to win/lose, move to history ──
 function setTipResult(id, r) {
   const tips = getTips();
   const t = tips.find(x => x.id === id);
-  if (t) { t.result = r; saveTips(tips.filter(x => x.id > 1000)); }
+  if (!t) return;
+
+  // Update the tip's result (optional, but we'll keep for consistency)
+  t.result = r;
+
+  // If result is win or lose, add to history
+  if (r === 'win' || r === 'lose') {
+    // Format today's date as DD.MM.YYYY
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    const formattedDate = `${day}.${month}.${year}`;
+
+    // Create history entry
+    const historyEntry = {
+      id: Date.now(),               // unique ID
+      date: formattedDate,
+      league: t.country || 'Unknown', // use country as league
+      match: t.match,
+      tip: t.tip,
+      odds: t.odds,
+      score: ''                      // optional, can be filled later
+    };
+
+    // Get current history, add new entry, save
+    const history = getHistory();
+    const newHistory = [historyEntry, ...history];
+    saveHistory(newHistory);
+  }
+
+  // Remove the tip from tips list (so it no longer appears)
+  const updatedTips = tips.filter(x => x.id !== id);
+  saveTips(updatedTips);
+
+  // Show confirmation
+  showNotif(`✅ Tip moved to history as ${r.toUpperCase()}`, '📋');
 }
 
 function delTip(id) {
