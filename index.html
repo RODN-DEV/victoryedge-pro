@@ -189,7 +189,7 @@
 
   <div class="main-menu">
     <button class="mm-btn mm-free" onclick="showView('free')">
-      <span>✅ DAILY FREE TIPS</span><span class="mm-cnt" id="freeCnt">3 picks</span>
+      <span>✅ DAILY FREE TIPS</span><span class="mm-cnt" id="freeCnt">0 picks</span>
     </button>
     <button class="mm-btn mm-vip" onclick="showView('vip')">
       <span>💎 VIP ACCESS</span><span id="vipLock" style="font-size:19px;">🔒</span>
@@ -236,9 +236,9 @@
       </div>
     </div>
     <div class="ptabs">
-      <button class="ptab ag" onclick="switchVipTab('gold',this)" id="vtab-gold">🥇 Gold <span class="cnt" id="vcnt-gold">5</span></button>
-      <button class="ptab" onclick="switchVipTab('silver',this)" id="vtab-silver">🥈 Silver <span class="cnt" id="vcnt-silver">5</span></button>
-      <button class="ptab" onclick="switchVipTab('diamond',this)" id="vtab-diamond">💎 Diamond <span class="cnt" id="vcnt-diamond">5</span></button>
+      <button class="ptab ag" onclick="switchVipTab('gold',this)" id="vtab-gold">🥇 Gold <span class="cnt" id="vcnt-gold">0</span></button>
+      <button class="ptab" onclick="switchVipTab('silver',this)" id="vtab-silver">🥈 Silver <span class="cnt" id="vcnt-silver">0</span></button>
+      <button class="ptab" onclick="switchVipTab('diamond',this)" id="vtab-diamond">💎 Diamond <span class="cnt" id="vcnt-diamond">0</span></button>
     </div>
     <div id="vipTipsList"></div>
   </div>
@@ -390,7 +390,7 @@
         <button class="bsub" style="margin-top:14px;" onclick="renderDevTable()">🔄 Refresh Devices</button>
       </div>
 
-      <!-- TIPS TAB -->
+      <!-- TIPS TAB (UPDATED with dropdown + custom input) -->
       <div class="acontent" id="a-tips">
         <h3 style="font-family:'Bebas Neue',sans-serif;font-size:20px;margin-bottom:12px;">Add Tip</h3>
         <div class="tform">
@@ -400,13 +400,24 @@
           </div>
           <div class="fg"><label>Match</label><input type="text" id="tMatch" placeholder="Real Madrid vs Getafe"></div>
           <div class="frow">
-            <div class="fg"><label>Tip</label>
-              <select id="tTip">
-                <option>FT 1 (Home Win)</option><option>FT 2 (Away Win)</option><option>FT X (Draw)</option>
-                <option>BTTS Yes</option><option>BTTS No</option><option>Over 1.5</option>
-                <option>Over 2.5</option><option>Under 2.5</option><option>DC 1X</option>
-                <option>DC X2</option><option>HT 0.5 Over</option><option>BTTS Each 2+</option>
+            <div class="fg">
+              <label>Tip (choose from list or type custom)</label>
+              <select id="tTipSelect">
+                <option value="">-- Select from list --</option>
+                <option>FT 1 (Home Win)</option>
+                <option>FT 2 (Away Win)</option>
+                <option>FT X (Draw)</option>
+                <option>BTTS Yes</option>
+                <option>BTTS No</option>
+                <option>Over 1.5</option>
+                <option>Over 2.5</option>
+                <option>Under 2.5</option>
+                <option>DC 1X</option>
+                <option>DC X2</option>
+                <option>HT 0.5 Over</option>
+                <option>BTTS Each 2+</option>
               </select>
+              <input type="text" id="tTipCustom" placeholder="Or type your own market here" style="margin-top: 6px;">
             </div>
             <div class="fg"><label>Odds</label><input type="number" id="tOdds" placeholder="2.50" step="0.01"></div>
           </div>
