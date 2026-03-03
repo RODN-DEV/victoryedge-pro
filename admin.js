@@ -103,30 +103,55 @@ function filterDev() {
   );
 }
 
-// ── TIPS ADMIN ────────────────────────────────────────
+// ── TIPS ADMIN (updated for dropdown + custom) ─────────
 function addTip() {
   const tips = getTips().filter(t => t.id > 1000); // only custom tips
+
+  // Determine which tip value to use: custom input if filled, otherwise dropdown
+  let tipValue = document.getElementById('tTipCustom').value.trim();
+  if (!tipValue) {
+    tipValue = document.getElementById('tTipSelect').value;
+    // If dropdown is still empty, show error
+    if (!tipValue) {
+      showNotif('⚠️ Please select a market from the list or type one', '⚠️');
+      return;
+    }
+  }
+
   const nt = {
     id:      Date.now(),
     time:    document.getElementById('tTime').value,
     country: document.getElementById('tCountry').value.trim(),
     match:   document.getElementById('tMatch').value.trim(),
-    tip:     document.getElementById('tTip').value,
+    tip:     tipValue,
     odds:    document.getElementById('tOdds').value,
     result:  document.getElementById('tResult').value,
     plan:    document.getElementById('tPlan').value,
   };
-  if (!nt.match || !nt.country || !nt.odds) { showNotif('⚠️ Fill all fields', '⚠️'); return; }
+
+  if (!nt.match || !nt.country || !nt.odds) {
+    showNotif('⚠️ Fill all fields (match, country, odds)', '⚠️');
+    return;
+  }
+
   const all = getTips();
   const lim = nt.plan === 'free' ? 3 : 5;
   if (all.filter(t => t.plan === nt.plan && t.id > 1000).length >= lim) {
     showNotif(`⚠️ Max ${lim} custom tips for ${nt.plan} — delete one first`, '⚠️');
     return;
   }
-  const newAll = [nt, ...all.filter(t => t.id > 1000)]; // only persist custom
+
+  const newAll = [nt, ...all.filter(t => t.id > 1000)];
   saveTips(newAll);
   showNotif('✅ Tip added!', '✅');
-  ['tMatch','tCountry','tOdds'].forEach(i => { document.getElementById(i).value = ''; });
+
+  // Clear fields
+  document.getElementById('tTime').value = '';
+  document.getElementById('tCountry').value = '';
+  document.getElementById('tMatch').value = '';
+  document.getElementById('tTipSelect').value = '';
+  document.getElementById('tTipCustom').value = '';
+  document.getElementById('tOdds').value = '';
 }
 
 function renderAdminTips() {
