@@ -282,13 +282,17 @@ function renderAdminTips() {
     </div>`).join('');
 }
 
-// ── UPDATED: When result changes to win/lose, move to history ──
+// ── FIXED: When result changes to win/lose, move to history with debug and refresh ──
 function setTipResult(id, r) {
+  console.log('setTipResult called', id, r);
   const tips = getTips();
   const t = tips.find(x => x.id === id);
-  if (!t) return;
+  if (!t) {
+    console.error('Tip not found', id);
+    return;
+  }
 
-  // Update the tip's result (optional, but we'll keep for consistency)
+  // Update the tip's result (optional)
   t.result = r;
 
   // If result is win or lose, add to history
@@ -310,16 +314,28 @@ function setTipResult(id, r) {
       odds: t.odds,
       score: ''                      // optional, can be filled later
     };
+    console.log('Created history entry:', historyEntry);
 
     // Get current history, add new entry, save
     const history = getHistory();
+    console.log('Current history count:', history.length);
     const newHistory = [historyEntry, ...history];
     saveHistory(newHistory);
+    console.log('Saved history, new count:', newHistory.length);
+
+    // Force refresh of admin history list
+    if (typeof renderHistAdmin === 'function') {
+      renderHistAdmin();
+    }
   }
 
   // Remove the tip from tips list (so it no longer appears)
   const updatedTips = tips.filter(x => x.id !== id);
   saveTips(updatedTips);
+  console.log('Tip removed, remaining tips:', updatedTips.length);
+
+  // Refresh the admin tips list
+  renderAdminTips();
 
   // Show confirmation
   showNotif(`✅ Tip moved to history as ${r.toUpperCase()}`, '📋');
