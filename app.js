@@ -101,10 +101,11 @@ document.addEventListener('keydown', e => {
 document.addEventListener('dragstart', e => e.preventDefault());
 
 // ── CONSTANTS ────────────────────────────────────────
-const ADMIN_PW_HASH = btoa('********');
+const ADMIN_PW_HASH = btoa('victory2026');
 const TG_ADMIN      = 'https://t.me/master_picks_odds';
 const TG_CHANNEL    = 'https://t.me/+11ot3EOvrYozNmI8';
-const THREE_DAYS    = 3 * 24 * 60 * 60 * 1000;
+const TRIAL_DAYS    = 1; // Changed from 3 to 1
+const TRIAL_DURATION = TRIAL_DAYS * 24 * 60 * 60 * 1000;
 
 // ── STATE ────────────────────────────────────────────
 let adminLoggedIn  = false;
@@ -306,7 +307,7 @@ function getEffPlan() {
   if (!['trial', 'free'].includes(d.plan)) return d.plan;
   if (d.plan === 'trial') {
     const elapsed = Date.now() - d.trialStart;
-    return elapsed < ONE_DAY ? 'vip' : 'expired';
+    return elapsed < TRIAL_DURATION ? 'vip' : 'expired';
   }
   return 'free';
 }
@@ -332,7 +333,7 @@ function updateTimers() {
     if (lbl) lbl.textContent = 'No Active Trial';
     updateSBPlan(); return;
   }
-  const remaining = THREE_DAYS - (Date.now() - d.trialStart);
+  const remaining = TRIAL_DURATION - (Date.now() - d.trialStart);
   if (remaining <= 0) {
     document.getElementById('trialStripActive').classList.add('hide');
     document.getElementById('trialStripExpired').classList.remove('hide');
@@ -391,7 +392,7 @@ function renderVipTips() {
 
   if (p === 'vip') {
     if (bt) bt.textContent = '🎁 Full VIP Access — Trial Active';
-    if (bs) bs.textContent = 'Enjoy all premium picks during your 3-day trial!';
+    if (bs) bs.textContent = 'Enjoy all premium picks during your 1-day trial!';
   } else if (ok) {
     if (bt) bt.textContent = '✅ Plan Active — Full Access';
     if (bs) bs.textContent = 'All picks unlocked for your subscription';
