@@ -306,7 +306,7 @@ function getEffPlan() {
   if (!['trial', 'free'].includes(d.plan)) return d.plan;
   if (d.plan === 'trial') {
     const elapsed = Date.now() - d.trialStart;
-    return elapsed < THREE_DAYS ? 'vip' : 'expired';
+    return elapsed < ONE_DAY ? 'vip' : 'expired';
   }
   return 'free';
 }
