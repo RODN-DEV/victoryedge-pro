@@ -101,7 +101,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('dragstart', e => e.preventDefault());
 
 // ── CONSTANTS ────────────────────────────────────────
-const ADMIN_PW_HASH = btoa('victory2026');
+const ADMIN_PW_HASH = btoa('********');
 const TG_ADMIN      = 'https://t.me/master_picks_odds';
 const TG_CHANNEL    = 'https://t.me/+11ot3EOvrYozNmI8';
 const THREE_DAYS    = 3 * 24 * 60 * 60 * 1000;
