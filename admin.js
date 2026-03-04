@@ -5,10 +5,8 @@
 
 'use strict';
 
-// ── EDITING STATE ─────────────────────────────────────
-let editingTipId = null; // stores ID of tip being edited
+let editingTipId = null;
 
-// ── ADMIN AUTH ────────────────────────────────────────
 function openAdmin() {
   document.getElementById('adminPanel').classList.add('open');
   if (adminLoggedIn) showADash();
@@ -35,16 +33,12 @@ function showADash() {
   renderAdminTips();
   renderHistAdmin();
 }
-
-// ── ADMIN TABS ────────────────────────────────────────
 function aTab(tab, btn) {
   document.querySelectorAll('.atab').forEach(t => t.classList.remove('act'));
   document.querySelectorAll('.acontent').forEach(c => c.classList.remove('act'));
   btn.classList.add('act');
   document.getElementById('a-' + tab).classList.add('act');
 }
-
-// ── DEVICE TABLE ──────────────────────────────────────
 function renderDevTable() {
   const reg  = getReg();
   const tbody = document.getElementById('devTbody');
@@ -56,8 +50,7 @@ function renderDevTable() {
   }
   tbody.innerHTML = devs.map(d => {
     const elapsed = d.plan === 'trial' ? Date.now() - d.trialStart : null;
-    const tLeft   = elapsed != null ? Math.max(0, Math.ceil((THREE_DAYS - elapsed) / 3600000)) + 'h left' : '-';
-    const planBadge = { free:'🆓', trial:'⏱', gold:'🥇', silver:'🥈', diamond:'💎' }[d.plan] || '?';
+    const tLeft   = elapsed != null ? Math.max(0, Math.ceil((TRIAL_DURATION - elapsed) / 3600000)) + 'h left' : '-';
     return `<tr>
       <td style="font-family:monospace;font-size:10px;color:var(--dm);word-break:break-all;max-width:150px;">${d.id}${d.id === DEVICE_ID ? ' <span style="background:var(--pu);color:#fff;padding:1px 5px;border-radius:4px;font-size:9px;">YOU</span>' : ''}</td>
       <td>
@@ -71,7 +64,6 @@ function renderDevTable() {
     </tr>`;
   }).join('');
 }
-
 function adminSetPlan(id) {
   const sel = document.getElementById('psel-' + id);
   if (!sel) return;
@@ -79,12 +71,10 @@ function adminSetPlan(id) {
   const r = getReg();
   if (r[id]) {
     r[id].plan = plan;
-    // If setting a paid plan, clear trial timer
     if (['gold','silver','diamond','free'].includes(plan)) {
       delete r[id].trialStart;
     }
     saveReg(r);
-    // Write directly to Firebase for immediate propagation
     if (firebaseReady) {
       dbDevices.child(id).update({ plan });
     }
@@ -98,35 +88,19 @@ function adminSetPlan(id) {
   }
   showNotif(`✅ ${id.slice(-10)} → ${plan.toUpperCase()}`, '✅');
 }
-
 function filterDev() {
   const q = document.getElementById('devSearch').value.toLowerCase();
   document.querySelectorAll('#devTbody tr').forEach(r =>
     r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'
   );
 }
-
-// ── TIPS ADMIN (dropdown + custom + edit) ─────────────
 function addTip() {
-  if (editingTipId !== null) {
-    // If we're in edit mode, treat as update
-    updateTip();
-    return;
-  }
-
-  const tips = getTips().filter(t => t.id > 1000); // only custom tips
-
-  // Determine which tip value to use: custom input if filled, otherwise dropdown
+  if (editingTipId !== null) { updateTip(); return; }
   let tipValue = document.getElementById('tTipCustom').value.trim();
   if (!tipValue) {
     tipValue = document.getElementById('tTipSelect').value;
-    // If dropdown is still empty, show error
-    if (!tipValue) {
-      showNotif('⚠️ Please select a market from the list or type one', '⚠️');
-      return;
-    }
+    if (!tipValue) { showNotif('⚠️ Please select or type a market', '⚠️'); return; }
   }
-
   const nt = {
     id:      Date.now(),
     time:    document.getElementById('tTime').value,
@@ -137,26 +111,17 @@ function addTip() {
     result:  document.getElementById('tResult').value,
     plan:    document.getElementById('tPlan').value,
   };
-
-  if (!nt.match || !nt.country || !nt.odds) {
-    showNotif('⚠️ Fill all fields (match, country, odds)', '⚠️');
-    return;
-  }
-
+  if (!nt.match || !nt.country || !nt.odds) { showNotif('⚠️ Fill all fields', '⚠️'); return; }
   const all = getTips();
   const lim = nt.plan === 'free' ? 3 : 5;
   if (all.filter(t => t.plan === nt.plan && t.id > 1000).length >= lim) {
-    showNotif(`⚠️ Max ${lim} custom tips for ${nt.plan} — delete one first`, '⚠️');
+    showNotif(`⚠️ Max ${lim} custom tips for ${nt.plan}`, '⚠️');
     return;
   }
-
-  const newAll = [nt, ...all.filter(t => t.id > 1000)];
-  saveTips(newAll);
+  saveTips([nt, ...all.filter(t => t.id > 1000)]);
   showNotif('✅ Tip added!', '✅');
-
   clearTipForm();
 }
-
 function clearTipForm() {
   document.getElementById('tTime').value = '';
   document.getElementById('tCountry').value = '';
@@ -166,29 +131,20 @@ function clearTipForm() {
   document.getElementById('tOdds').value = '';
   document.getElementById('tResult').value = 'pending';
   document.getElementById('tPlan').value = 'free';
-  // Reset button text and editing state
   const addBtn = document.querySelector('#a-tips .bsub');
-  if (addBtn) {
-    addBtn.textContent = '+ Add Tip';
-    addBtn.setAttribute('onclick', 'addTip()');
-  }
+  if (addBtn) { addBtn.textContent = '+ Add Tip'; addBtn.setAttribute('onclick', 'addTip()'); }
   editingTipId = null;
 }
-
 function startEditTip(id) {
   const tips = getTips();
   const tip = tips.find(t => t.id === id);
   if (!tip) return;
-
-  // Fill the form with tip data
   document.getElementById('tTime').value = tip.time || '';
   document.getElementById('tCountry').value = tip.country || '';
   document.getElementById('tMatch').value = tip.match || '';
   document.getElementById('tOdds').value = tip.odds || '';
   document.getElementById('tResult').value = tip.result || 'pending';
   document.getElementById('tPlan').value = tip.plan || 'free';
-
-  // Handle tip market: check if it's in the dropdown options
   const select = document.getElementById('tTipSelect');
   const custom = document.getElementById('tTipCustom');
   const options = Array.from(select.options).map(opt => opt.value);
@@ -199,31 +155,18 @@ function startEditTip(id) {
     select.value = '';
     custom.value = tip.tip;
   }
-
-  // Change button to "Update Tip"
   const addBtn = document.querySelector('#a-tips .bsub');
   addBtn.textContent = '✏️ Update Tip';
   addBtn.setAttribute('onclick', 'updateTip()');
-
   editingTipId = id;
 }
-
 function updateTip() {
-  if (editingTipId === null) {
-    showNotif('⚠️ No tip being edited', '⚠️');
-    return;
-  }
-
-  // Get form values
+  if (editingTipId === null) { showNotif('⚠️ No tip being edited', '⚠️'); return; }
   let tipValue = document.getElementById('tTipCustom').value.trim();
   if (!tipValue) {
     tipValue = document.getElementById('tTipSelect').value;
-    if (!tipValue) {
-      showNotif('⚠️ Please select a market from the list or type one', '⚠️');
-      return;
-    }
+    if (!tipValue) { showNotif('⚠️ Please select or type a market', '⚠️'); return; }
   }
-
   const updatedTip = {
     id:      editingTipId,
     time:    document.getElementById('tTime').value,
@@ -234,36 +177,23 @@ function updateTip() {
     result:  document.getElementById('tResult').value,
     plan:    document.getElementById('tPlan').value,
   };
-
-  if (!updatedTip.match || !updatedTip.country || !updatedTip.odds) {
-    showNotif('⚠️ Fill all fields (match, country, odds)', '⚠️');
-    return;
-  }
-
-  // Get all tips, replace the edited one, keep only custom ones
+  if (!updatedTip.match || !updatedTip.country || !updatedTip.odds) { showNotif('⚠️ Fill all fields', '⚠️'); return; }
   const allTips = getTips();
-  const filtered = allTips.filter(t => t.id > 1000); // only custom
+  const filtered = allTips.filter(t => t.id > 1000);
   const index = filtered.findIndex(t => t.id === editingTipId);
-  if (index !== -1) {
-    filtered[index] = updatedTip;
-  } else {
-    // Should not happen, but just in case
-    filtered.push(updatedTip);
-  }
-
+  if (index !== -1) filtered[index] = updatedTip;
+  else filtered.push(updatedTip);
   saveTips(filtered);
   showNotif('✅ Tip updated!', '✅');
-
   clearTipForm();
-  renderAdminTips(); // refresh list
+  renderAdminTips();
 }
-
 function renderAdminTips() {
   const c = document.getElementById('adminTipList');
   if (!c) return;
-  const tips = getTips().filter(t => t.id > 1000); // show only custom
+  const tips = getTips().filter(t => t.id > 1000);
   if (!tips.length) {
-    c.innerHTML = `<div style="text-align:center;color:var(--muted);padding:14px;font-size:12px;">No custom tips yet. Add above.</div>`;
+    c.innerHTML = `<div style="text-align:center;color:var(--muted);padding:14px;">No custom tips yet. Add above.</div>`;
     return;
   }
   c.innerHTML = tips.map(tip => `
@@ -281,100 +211,59 @@ function renderAdminTips() {
       <button class="del-btn" onclick="delTip(${tip.id})">🗑</button>
     </div>`).join('');
 }
-
-// ── FIXED: When result changes to win/lose, move to history with debug and refresh ──
 function setTipResult(id, r) {
-  console.log('setTipResult called', id, r);
   const tips = getTips();
   const t = tips.find(x => x.id === id);
-  if (!t) {
-    console.error('Tip not found', id);
-    return;
-  }
-
-  // Update the tip's result (optional)
-  t.result = r;
-
-  // If result is win or lose, add to history
+  if (!t) return;
   if (r === 'win' || r === 'lose') {
-    // Format today's date as DD.MM.YYYY
     const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    const formattedDate = `${day}.${month}.${year}`;
-
-    // Create history entry
+    const formattedDate = `${String(today.getDate()).padStart(2,'0')}.${String(today.getMonth()+1).padStart(2,'0')}.${today.getFullYear()}`;
     const historyEntry = {
-      id: Date.now(),               // unique ID
+      id: Date.now(),
       date: formattedDate,
-      league: t.country || 'Unknown', // use country as league
+      league: t.country || 'Unknown',
       match: t.match,
       tip: t.tip,
       odds: t.odds,
-      score: ''                      // optional, can be filled later
+      score: ''
     };
-    console.log('Created history entry:', historyEntry);
-
-    // Get current history, add new entry, save
     const history = getHistory();
-    console.log('Current history count:', history.length);
-    const newHistory = [historyEntry, ...history];
-    saveHistory(newHistory);
-    console.log('Saved history, new count:', newHistory.length);
-
-    // Force refresh of admin history list
-    if (typeof renderHistAdmin === 'function') {
-      renderHistAdmin();
-    }
+    saveHistory([historyEntry, ...history]);
+    renderHistAdmin();
   }
-
-  // Remove the tip from tips list (so it no longer appears)
-  const updatedTips = tips.filter(x => x.id !== id);
-  saveTips(updatedTips);
-  console.log('Tip removed, remaining tips:', updatedTips.length);
-
-  // Refresh the admin tips list
+  saveTips(tips.filter(x => x.id !== id));
   renderAdminTips();
-
-  // Show confirmation
   showNotif(`✅ Tip moved to history as ${r.toUpperCase()}`, '📋');
 }
-
 function delTip(id) {
   saveTips(getTips().filter(t => t.id !== id && t.id > 1000));
   showNotif('🗑 Deleted', '🗑');
 }
-
-// ── HISTORY ADMIN ─────────────────────────────────────
 function addHistory() {
   const hist = getHistory().filter(h => h.id > 1000);
   const nh = {
-    id:     Date.now(),
-    date:   document.getElementById('hDate').value,
+    id: Date.now(),
+    date: document.getElementById('hDate').value,
     league: document.getElementById('hLeague').value.trim(),
-    match:  document.getElementById('hMatch').value.trim(),
-    tip:    document.getElementById('hTip').value.trim(),
-    odds:   document.getElementById('hOdds').value,
-    score:  '',
+    match: document.getElementById('hMatch').value.trim(),
+    tip: document.getElementById('hTip').value.trim(),
+    odds: document.getElementById('hOdds').value,
+    score: ''
   };
   if (!nh.match || !nh.league) { showNotif('⚠️ Fill all fields', '⚠️'); return; }
-  const newHist = [nh, ...hist];
-  saveHistory(newHist);
+  saveHistory([nh, ...hist]);
   showNotif('✅ History added!', '✅');
-  ['hDate','hLeague','hMatch','hTip','hOdds'].forEach(i => { document.getElementById(i).value = ''; });
+  ['hDate','hLeague','hMatch','hTip','hOdds'].forEach(i => document.getElementById(i).value = '');
 }
-
 function delHistory(id) {
   saveHistory(getHistory().filter(h => h.id !== id && h.id > 1000));
 }
-
 function renderHistAdmin() {
   const c = document.getElementById('histAdminList');
   if (!c) return;
   const h = getHistory().filter(x => x.id > 1000);
   if (!h.length) {
-    c.innerHTML = `<div style="text-align:center;color:var(--muted);padding:14px;font-size:12px;">No custom history entries yet.</div>`;
+    c.innerHTML = `<div style="text-align:center;color:var(--muted);padding:14px;">No custom history entries yet.</div>`;
     return;
   }
   c.innerHTML = h.map(x => `
@@ -386,8 +275,6 @@ function renderHistAdmin() {
       <button class="del-btn" onclick="delHistory(${x.id})">🗑</button>
     </div>`).join('');
 }
-
-// ── NOTIFY ────────────────────────────────────────────
 function adminSendNotif() {
   const m = document.getElementById('notifMsg').value.trim();
   if (!m) return;
