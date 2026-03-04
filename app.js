@@ -1,6 +1,5 @@
 // ═══════════════════════════════════════════════════
-// VictoryEdge Pro — app.js
-// Main application logic + Firebase data layer
+// VictoryEdge Pro — app.js (FULLY WORKING)
 // ═══════════════════════════════════════════════════
 
 'use strict';
@@ -91,7 +90,7 @@ document.addEventListener('dragstart', e => e.preventDefault());
 const ADMIN_PW_HASH = btoa('victory2026');
 const TG_ADMIN      = 'https://t.me/master_picks_odds';
 const TG_CHANNEL    = 'https://t.me/+11ot3EOvrYozNmI8';
-const TRIAL_DAYS    = 1;
+const TRIAL_DAYS    = 1; // 1 day trial
 const TRIAL_DURATION = TRIAL_DAYS * 24 * 60 * 60 * 1000;
 
 // ── STATE ────────────────────────────────────────────
@@ -166,12 +165,17 @@ function initFirebase() {
       updateTimers();
       renderFreeTips();
       renderVipTips();
-      if (adminLoggedIn) renderDevTable(); // refresh admin if logged in
+      if (adminLoggedIn) renderDevTable();
     });
 
     dbTips.on('value', snap => {
       const val = snap.val();
-      cachedTips = (val && typeof val === 'object') ? Object.values(val).sort((a,b) => b.id - a.id) : [];
+      if (val && typeof val === 'object') {
+        cachedTips = Object.values(val);
+        cachedTips.sort((a, b) => b.id - a.id);
+      } else {
+        cachedTips = [];
+      }
       renderFreeTips();
       renderVipTips();
       if (adminLoggedIn) renderAdminTips();
@@ -179,7 +183,12 @@ function initFirebase() {
 
     dbHistory.on('value', snap => {
       const val = snap.val();
-      cachedHistory = (val && typeof val === 'object') ? Object.values(val).sort((a,b) => b.id - a.id) : [];
+      if (val && typeof val === 'object') {
+        cachedHistory = Object.values(val);
+        cachedHistory.sort((a, b) => b.id - a.id);
+      } else {
+        cachedHistory = [];
+      }
       renderHistory();
       if (adminLoggedIn) renderHistAdmin();
     });
@@ -305,15 +314,16 @@ function updateTimers() {
   updateSBPlan();
 }
 
-// ── RENDER TIPS & HISTORY (unchanged from your previous working version) ──
-// (I'll keep them concise; you already have them in your file)
-
+// ── RENDER FREE TIPS ──────────────────────────────────
 function renderFreeTips() {
   const tips = getTips().filter(t => t.plan === 'free');
-  document.getElementById('freeCnt').textContent = tips.length + ' picks';
+  const el = document.getElementById('freeCnt');
+  if (el) el.textContent = tips.length + ' picks';
   const list = document.getElementById('freeTipsList');
   if (list) list.innerHTML = tips.map(t => buildCard(t, 'free', true)).join('');
 }
+
+// ── RENDER VIP TIPS ───────────────────────────────────
 function switchVipTab(plan, btn) {
   activeVipTab = plan;
   document.querySelectorAll('.ptab').forEach(t => t.className = 'ptab');
@@ -321,20 +331,33 @@ function switchVipTab(plan, btn) {
   if (btn) btn.className = 'ptab ' + (cls[plan] || '');
   renderVipTips();
 }
+
 function renderVipTips() {
-  const p = getEffPlan();
+  const p    = getEffPlan();
   const tips = getTips().filter(t => t.plan === activeVipTab);
-  const el = document.getElementById('vipTipsList');
+  const el   = document.getElementById('vipTipsList');
   if (!el) return;
-  const ok = canSee(activeVipTab, p);
-  document.getElementById('vipBannerT').textContent = ok ? (p==='vip'?'🎁 Full VIP Access — Trial Active':'✅ Plan Active — Full Access') : `🔒 ${activeVipTab} Plan Required`;
-  document.getElementById('vipBannerS').textContent = ok ? (p==='vip'?'Enjoy all premium picks during your 1-day trial!':'All picks unlocked for your subscription') : 'Upgrade to access these picks';
+  const ok  = canSee(activeVipTab, p);
+  const bt  = document.getElementById('vipBannerT');
+  const bs  = document.getElementById('vipBannerS');
+  if (bt && bs) {
+    if (p === 'vip') {
+      bt.textContent = '🎁 Full VIP Access — Trial Active';
+      bs.textContent = 'Enjoy all premium picks during your 1-day trial!';
+    } else if (ok) {
+      bt.textContent = '✅ Plan Active — Full Access';
+      bs.textContent = 'All picks unlocked for your subscription';
+    } else {
+      bt.textContent = `🔒 ${activeVipTab.charAt(0).toUpperCase() + activeVipTab.slice(1)} Plan Required`;
+      bs.textContent = 'Upgrade to access these picks';
+    }
+  }
   ['gold','silver','diamond'].forEach(pl => {
-    const c = document.getElementById('vcnt-'+pl);
+    const c = document.getElementById('vcnt-' + pl);
     if (c) c.textContent = getTips().filter(t => t.plan === pl).length;
   });
   if (!ok) {
-    el.innerHTML = `<div class="up-prompt"><h3>🔒 LOCKED</h3><p>You need a <strong>${activeVipTab}</strong> subscription.</p><button class="up-btn" onclick="showView('plans')">💎 Upgrade Now</button></div>`;
+    el.innerHTML = `<div class="up-prompt"><h3>🔒 LOCKED</h3><p>You need a <strong>${activeVipTab.charAt(0).toUpperCase() + activeVipTab.slice(1)}</strong> subscription.</p><button class="up-btn" onclick="showView('plans')">💎 Upgrade Now</button></div>`;
     return;
   }
   if (!tips.length) {
@@ -343,46 +366,74 @@ function renderVipTips() {
   }
   el.innerHTML = tips.map(t => buildCard(t, activeVipTab, ok)).join('');
 }
+
+// ── BUILD CARD ────────────────────────────────────────
 function buildCard(tip, plan, ok) {
+  if (tip.time === 'ACCA' && ok) {
+    return `<div class="acca-card"><div class="acca-glow"></div><div class="acca-title">💎 7-FOLD MEGA ACCUMULATOR</div><div class="acca-teams">Bidco · Ludogorets · Rodina · Kakamega · Real Madrid · Slobozia · Sandviken</div><div class="acca-lbl">Total Odds</div><div class="acca-odds">${tip.odds}</div><div style="margin-top:9px;display:flex;align-items:center;gap:7px;"><div style="background:rgba(108,63,214,.18);border:1px solid rgba(108,63,214,.38);color:var(--pu2);padding:3px 11px;border-radius:7px;font-size:10px;font-weight:800;">DIAMOND EXCLUSIVE</div>${rdot(tip.result)}</div></div>`;
+  }
   if (!ok) {
-    return `<div class="tip-card locked tc-${plan}"><div class="blur-c">...</div><div class="lock-ov"><span class="lock-ico">🔒</span><button class="lock-msg-btn" onclick="showView('plans')">Upgrade to Unlock</button></div></div>`;
+    return `<div class="tip-card locked tc-${plan}"><div class="blur-c"><div class="tc-hd"><span class="tc-league">🌍 ???</span><span class="tc-time">??:??</span></div><div class="tc-match">???? vs ????</div><div class="tc-ft"><span class="tc-chip chip-${plan}">🔒 Locked</span><span class="tc-odds">?.??</span></div></div><div class="lock-ov"><span class="lock-ico">🔒</span><button class="lock-msg-btn" onclick="showView('plans')">Upgrade to Unlock</button></div></div>`;
   }
   return `<div class="tip-card tc-${plan}"><div class="tc-hd"><span class="tc-league">⚽ ${tip.country}</span><span class="tc-time">${tip.time}</span></div><div class="tc-match">${tip.match}</div><div class="tc-ft"><span class="tc-chip chip-${plan}">${tip.tip}</span><span class="tc-odds">${tip.odds}</span>${rdot(tip.result)}</div></div>`;
 }
+
 function rdot(r) {
-  if (r === 'win') return `<div class="tc-res rw">W</div>`;
+  if (r === 'win')  return `<div class="tc-res rw">W</div>`;
   if (r === 'lose') return `<div class="tc-res rl">L</div>`;
   return `<div class="tc-res rp">?</div>`;
 }
+
+// ── HISTORY ───────────────────────────────────────────
 function renderHistory() {
   const grid = document.getElementById('historyGrid');
   if (!grid) return;
   const h = getHistory();
   grid.innerHTML = h.map(x => {
-    return `<div class="hc"><div class="hc-top"><span class="hc-date">📅 ${x.date}</span><span class="hc-win">✅ WIN</span></div><div class="hc-match">${x.match}</div><div class="hc-bot"><span class="hc-tip">${x.league} · ${x.tip}</span><span class="hc-odds">${x.odds}</span></div></div>`;
+    const scoreTag = x.score ? ` · <span style="background:rgba(0,230,118,.15);color:var(--gr);border:1px solid var(--gr);padding:1px 7px;border-radius:5px;font-size:10px;font-weight:800;">${x.score}</span>` : '';
+    return `<div class="hc"><div class="hc-top"><span class="hc-date">📅 ${x.date}</span><span class="hc-win">✅ WIN</span></div><div class="hc-match">${x.match}</div><div class="hc-bot" style="flex-wrap:wrap;gap:5px;"><span class="hc-tip">${x.league} · ${x.tip}${scoreTag}</span><span class="hc-odds">${x.odds}</span></div></div>`;
   }).join('');
   renderHistAdmin();
 }
-function showView(v) { /* unchanged */ }
+
+// ── VIEW NAVIGATION (CRITICAL FOR TABS) ───────────────
+function showView(v) {
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+  const target = document.getElementById('view-' + v);
+  if (target) target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.querySelectorAll('.snav a').forEach(a => a.classList.remove('act'));
+  const map = { home: 0, free: 1, vip: 2, history: 3, plans: 4 };
+  const links = document.querySelectorAll('.snav a');
+  if (map[v] !== undefined && links[map[v]]) links[map[v]].classList.add('act');
+  if (v === 'free')    renderFreeTips();
+  if (v === 'vip')     renderVipTips();
+  if (v === 'history') renderHistory();
+  updateHomeUI();
+}
+
 function updateHomeUI() {
   const p = getEffPlan();
   const ico = document.getElementById('vipLock');
   if (ico) ico.textContent = (p === 'vip' || planLvl[p] >= 1) ? '🔓' : '🔒';
 }
+
 function updateSBPlan() {
-  const p = getEffPlan();
+  const p  = getEffPlan();
   const el = document.getElementById('sbPlanDisplay');
-  const m = {
-    vip: ['pb-trial', '⏱ VIP Trial Active'],
-    free: ['pb-free', '🆓 Free Plan'],
-    gold: ['pb-gold', '🥇 Gold Plan'],
-    silver: ['pb-silver', '🥈 Silver Plan'],
+  const m  = {
+    vip:     ['pb-trial',   '⏱ VIP Trial Active'],
+    free:    ['pb-free',    '🆓 Free Plan'],
+    gold:    ['pb-gold',    '🥇 Gold Plan'],
+    silver:  ['pb-silver',  '🥈 Silver Plan'],
     diamond: ['pb-diamond', '💎 Diamond Plan'],
     expired: ['pb-expired', '⚠️ Trial Expired'],
   };
   const [cls, lbl] = m[p] || ['pb-free', 'Free Plan'];
   if (el) el.innerHTML = `<div class="plan-badge ${cls}">${lbl}</div>`;
 }
+
+// ── WELCOME ───────────────────────────────────────────
 function closeWelcome() {
   document.getElementById('welcomeModal').style.display = 'none';
   checkExpired();
@@ -402,8 +453,12 @@ function subscribePlan(plan) {
   window.open(`https://t.me/master_picks_odds?text=${msg}`, '_blank');
   showNotif(`📩 Opening Telegram for ${plan.toUpperCase()} subscription...`, '✈️');
 }
+
+// ── TUTORIAL ──────────────────────────────────────────
 function openTut()  { document.getElementById('tutModal').classList.add('show'); }
 function closeTut() { document.getElementById('tutModal').classList.remove('show'); }
+
+// ── NOTIFICATIONS ─────────────────────────────────────
 function requestNotifPerm() {
   if ('Notification' in window && Notification.permission === 'default')
     setTimeout(() => Notification.requestPermission(), 3000);
@@ -414,12 +469,14 @@ function pushNotif(m) {
 }
 function showNotif(m, i = '⚽') {
   document.getElementById('notifIcon').textContent = i;
-  document.getElementById('notifTxt').textContent = m;
+  document.getElementById('notifTxt').textContent  = m;
   const n = document.getElementById('notif');
   n.classList.add('show');
   setTimeout(() => n.classList.remove('show'), 5000);
 }
 function closeNotif() { document.getElementById('notif').classList.remove('show'); }
+
+// ── SIDEBAR ───────────────────────────────────────────
 function toggleSB() {
   document.getElementById('sb').classList.toggle('open');
   document.getElementById('sover').classList.toggle('open');
@@ -430,6 +487,8 @@ function closeSB() {
   document.getElementById('sover').classList.remove('open');
   document.getElementById('ham').classList.remove('open');
 }
+
+// ── THEME ─────────────────────────────────────────────
 function setTheme(t) {
   if (!t) t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', t);
@@ -437,6 +496,8 @@ function setTheme(t) {
   const b = document.getElementById('themeBtn');
   if (b) b.textContent = t === 'dark' ? '🌙' : '☀️';
 }
+
+// ── LANGUAGE ──────────────────────────────────────────
 function setLang(l) {
   localStorage.setItem('lang', l);
   document.documentElement.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
@@ -445,19 +506,27 @@ function setLang(l) {
   );
   showNotif('🌐 Language updated', '🌐');
 }
+
+// ── COPY DEVICE ID ────────────────────────────────────
 function copyDID() {
   navigator.clipboard.writeText(DEVICE_ID).then(() =>
     showNotif('✅ Device ID copied! Send to @master_picks_odds', '📋')
   );
 }
+
+// ── SCROLL UP ─────────────────────────────────────────
 window.addEventListener('scroll', () =>
   document.getElementById('sup').classList.toggle('show', window.scrollY > 300)
 );
+
+// ── INIT ──────────────────────────────────────────────
 (function init() {
   const savedTheme = localStorage.getItem('theme') || 'dark';
   setTheme(savedTheme);
-  document.getElementById('didVal').textContent = DEVICE_ID;
-  document.getElementById('footerDID').textContent = 'Device: ' + DEVICE_ID;
+  const didEl = document.getElementById('didVal');
+  if (didEl) didEl.textContent = DEVICE_ID;
+  const footerDid = document.getElementById('footerDID');
+  if (footerDid) footerDid.textContent = 'Device: ' + DEVICE_ID;
   initFirebase();
   timerInt = setInterval(updateTimers, 1000);
   setTimeout(() => {
