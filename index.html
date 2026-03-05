@@ -81,7 +81,7 @@
     <a href="#" onclick="showView('history');closeSB();">⭐ Winning History</a>
     <a href="#" onclick="showView('plans');closeSB();">📋 Subscription Plans</a>
     <a href="#" onclick="openTut();closeSB();">📖 How It Works</a>
-    <a href="#" onclick="openAdmin();closeSB();">🔐 Admin Panel</a>
+    <a href="#" id="adminOpenBtn" onclick="openAdmin();closeSB();">🔐 Admin Panel</a>
   </nav>
   <div class="sdiv"></div>
   <div class="ssect">VIP Trial Timer</div>
@@ -144,7 +144,7 @@
     <button class="ib" onclick="setTheme()" id="themeBtn">🌙</button>
     <a class="ib" href="https://t.me/master_picks_odds" target="_blank">✈️</a>
     <button class="ib" onclick="openTut()">📖</button>
-    <button class="ib" onclick="openAdmin()">🔐</button>
+    <button class="ib" id="adminOpenBtn2" onclick="openAdmin()">🔐</button>
     <div class="ham" id="ham" onclick="toggleSB()"><span></span><span></span><span></span></div>
   </div>
 </nav>
