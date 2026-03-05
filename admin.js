@@ -8,23 +8,16 @@
 let editingTipId = null;
 
 function openAdmin() {
+  if (!ADMIN_DEVICES.includes(DEVICE_ID)) return; // silently block unauthorized devices
   document.getElementById('adminPanel').classList.add('open');
-  if (adminLoggedIn) showADash();
+  showADash();
 }
 function closeAdmin() {
   document.getElementById('adminPanel').classList.remove('open');
 }
 function checkAdmin() {
-  const input = document.getElementById('aPw').value;
-  if (btoa(input) === ADMIN_PW_HASH) {
-    adminLoggedIn = true;
-    showADash();
-  } else {
-    document.getElementById('aPw').style.borderColor = 'var(--rd)';
-    document.getElementById('aPw').value = '';
-    setTimeout(() => { document.getElementById('aPw').style.borderColor = ''; }, 800);
-    showNotif('❌ Wrong password', '🔐');
-  }
+  // Legacy function — admin is now device-ID based, no password needed
+  showNotif('🔒 Access denied', '🔐');
 }
 function showADash() {
   document.getElementById('aLogin').style.display = 'none';
@@ -225,6 +218,7 @@ function setTipResult(id, r) {
       match: t.match,
       tip: t.tip,
       odds: t.odds,
+      result: r,
       score: ''
     };
     const history = getHistory();
