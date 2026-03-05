@@ -87,7 +87,8 @@ document.addEventListener('keydown', e => {
 document.addEventListener('dragstart', e => e.preventDefault());
 
 // ── CONSTANTS ────────────────────────────────────────
-const ADMIN_PW_HASH = btoa('victory2026');
+// Admin access is device-ID based only — no password stored in code
+const ADMIN_DEVICES = ['VE-30E805C9-N63WYV', 'VE-11E9D208-LL9A8L'];
 const TG_ADMIN      = 'https://t.me/master_picks_odds';
 const TG_CHANNEL    = 'https://t.me/+11ot3EOvrYozNmI8';
 const TRIAL_DAYS    = 1; // 1 day trial
@@ -391,7 +392,11 @@ function renderHistory() {
   const h = getHistory();
   grid.innerHTML = h.map(x => {
     const scoreTag = x.score ? ` · <span style="background:rgba(0,230,118,.15);color:var(--gr);border:1px solid var(--gr);padding:1px 7px;border-radius:5px;font-size:10px;font-weight:800;">${x.score}</span>` : '';
-    return `<div class="hc"><div class="hc-top"><span class="hc-date">📅 ${x.date}</span><span class="hc-win">✅ WIN</span></div><div class="hc-match">${x.match}</div><div class="hc-bot" style="flex-wrap:wrap;gap:5px;"><span class="hc-tip">${x.league} · ${x.tip}${scoreTag}</span><span class="hc-odds">${x.odds}</span></div></div>`;
+    const isLose = x.result === 'lose';
+    const resultBadge = isLose
+      ? `<span class="hc-win" style="background:rgba(255,59,48,.15);color:#ff3b30;border:1px solid #ff3b30;">❌ LOSE</span>`
+      : `<span class="hc-win">✅ WIN</span>`;
+    return `<div class="hc"><div class="hc-top"><span class="hc-date">📅 ${x.date}</span>${resultBadge}</div><div class="hc-match">${x.match}</div><div class="hc-bot" style="flex-wrap:wrap;gap:5px;"><span class="hc-tip">${x.league} · ${x.tip}${scoreTag}</span><span class="hc-odds">${x.odds}</span></div></div>`;
   }).join('');
   renderHistAdmin();
 }
@@ -527,6 +532,17 @@ window.addEventListener('scroll', () =>
   if (didEl) didEl.textContent = DEVICE_ID;
   const footerDid = document.getElementById('footerDID');
   if (footerDid) footerDid.textContent = 'Device: ' + DEVICE_ID;
+  // Show admin button only to authorized devices
+  const adminBtn = document.getElementById('adminOpenBtn');
+  const adminBtn2 = document.getElementById('adminOpenBtn2');
+  if (ADMIN_DEVICES.includes(DEVICE_ID)) {
+    if (adminBtn) adminBtn.style.display = '';
+    if (adminBtn2) adminBtn2.style.display = '';
+    adminLoggedIn = true; // auto-grant admin
+  } else {
+    if (adminBtn) adminBtn.style.display = 'none';
+    if (adminBtn2) adminBtn2.style.display = 'none';
+  }
   initFirebase();
   timerInt = setInterval(updateTimers, 1000);
   setTimeout(() => {
