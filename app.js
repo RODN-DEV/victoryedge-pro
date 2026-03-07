@@ -88,7 +88,7 @@ document.addEventListener('dragstart', e => e.preventDefault());
 
 // ── CONSTANTS ────────────────────────────────────────
 // Admin access is device-ID based only — no password stored in code
-const ADMIN_DEVICES = ['VE-30E805C9-N63WYV', 'VE-11E9D208-LL9A8L'];
+const ADMIN_DEVICES = ['VE-30E805C9-N63WYV', 'VE-11E9D208-LL9A8L', 'VE-147AB39D-N63WYV'];
 const TG_ADMIN      = 'https://t.me/master_picks_odds';
 const TG_CHANNEL    = 'https://t.me/+11ot3EOvrYozNmI8';
 const TRIAL_DAYS    = 1; // 1 day trial
@@ -150,8 +150,7 @@ function initFirebase() {
         } else {
           const newDev = {
             id: DEVICE_ID,
-            plan: 'trial',
-            trialStart: Date.now(),
+            plan: 'free',
             joined: new Date().toLocaleDateString()
           };
           cachedDevices[DEVICE_ID] = newDev;
@@ -210,8 +209,7 @@ function initFirebase() {
     } else {
       const newDev = {
         id: DEVICE_ID,
-        plan: 'trial',
-        trialStart: Date.now(),
+        plan: 'free',
         joined: new Date().toLocaleDateString()
       };
       cachedDevices = { [DEVICE_ID]: newDev };
@@ -253,16 +251,14 @@ function saveReg(r) {
 
 // ── DEVICE REGISTRY ──────────────────────────────────
 function getMyDev() {
-  return cachedDevices[DEVICE_ID] || { id: DEVICE_ID, plan: 'trial', trialStart: Date.now(), joined: new Date().toLocaleDateString() };
+  return cachedDevices[DEVICE_ID] || { id: DEVICE_ID, plan: 'free', joined: new Date().toLocaleDateString() };
 }
 function getEffPlan() {
   const d = getMyDev();
   if (!d) return 'free';
-  if (!['trial', 'free'].includes(d.plan)) return d.plan;
-  if (d.plan === 'trial') {
-    const elapsed = Date.now() - d.trialStart;
-    return elapsed < TRIAL_DURATION ? 'vip' : 'expired';
-  }
+  // Trial plan is disabled — always treat as expired
+  if (d.plan === 'trial') return 'expired';
+  if (!['free'].includes(d.plan)) return d.plan;
   return 'free';
 }
 const planLvl = { free: 0, gold: 1, silver: 2, diamond: 3, vip: 10 };
