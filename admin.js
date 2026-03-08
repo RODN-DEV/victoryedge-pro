@@ -273,7 +273,18 @@ async function adminSendNotif() {
   const m = document.getElementById('notifMsg').value.trim();
   if (!m) { showNotif('⚠️ Type a message first', '⚠️'); return; }
 
-  if (!firebaseReady) { showNotif('❌ Firebase not connected', '⚠️'); return; }
+  const btn = document.querySelector('#a-notify .bsub');
+  if (btn) { btn.textContent = '⏳ Sending...'; btn.disabled = true; }
+
+  const restore = () => { if (btn) { btn.textContent = '🔔 Broadcast'; btn.disabled = false; } };
+
+  // First show it locally immediately so you can confirm it works
+  showNotif('📣 ' + m, '📣');
+
+  if (!firebaseReady) {
+    showNotif('❌ Firebase not connected — check your config', '⚠️');
+    restore(); return;
+  }
 
   try {
     await firebase.database().ref('notifications').push({
@@ -284,11 +295,10 @@ async function adminSendNotif() {
     });
     document.getElementById('notifMsg').value = '';
     showNotif('✅ Broadcast sent to all users!', '📣');
-    // Show local native notification too
-    if (Notification.permission === 'granted') {
-      new Notification('VictoryEdge Pro 🏆', { body: m, icon: '/icon-192.png' });
-    }
   } catch(e) {
-    showNotif('❌ Failed: ' + e.message, '⚠️');
+    showNotif('❌ Error: ' + e.message, '⚠️');
+    console.error('Broadcast error:', e);
   }
+
+  restore();
 }
