@@ -462,44 +462,109 @@ function closeTut() { document.getElementById('tutModal').classList.remove('show
 // ── PUSH NOTIFICATIONS (FCM) ──────────────────────────
 const VAPID_KEY = 'BHEtPHX_yYIvh8jIO7r9jpvWQWn7wisaWFCnK2ZwBLiF-8tv_MoZ-XdCcHkHqqQNNxBn81mGTu-ZcuheO0KjAG0';
 
-async function initPushNotifications() {
+async function setupFCM() {
   try {
-    if (!('serviceWorker' in navigator)) { console.warn('SW not supported'); return; }
-
-    // Register service worker
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
     const reg = await navigator.serviceWorker.register('/sw.js');
     await navigator.serviceWorker.ready;
-    console.log('✅ Service Worker ready');
 
-    // Request permission
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') { console.warn('Notification permission denied'); return; }
+    if (Notification.permission !== 'granted') return;
 
-    // Init FCM
     const messaging = firebase.messaging();
-
-    // Get token
     const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
     if (token && firebaseReady) {
       firebase.database().ref('fcmTokens/' + DEVICE_ID).set({ token, device: DEVICE_ID, updated: Date.now() });
       console.log('✅ FCM ready');
     }
-
-    // Foreground messages (app open)
     messaging.onMessage(payload => {
       const body = payload.notification?.body || payload.data?.message || '';
       const title = payload.notification?.title || 'VictoryEdge Pro';
       showNotif('📣 ' + body, '📣');
       new Notification(title, { body, icon: '/icon-192.png' });
     });
-
   } catch(err) {
-    console.warn('Push setup error:', err.message);
+    console.warn('FCM setup error:', err.message);
   }
 }
 
-function requestNotifPerm() {
-  setTimeout(() => initPushNotifications(), 3000);
+async function requestNotifPerm() {
+  if (!('Notification' in window)) return;
+
+  const perm = Notification.permission;
+
+  if (perm === 'granted') {
+    // Already allowed — just setup FCM silently
+    setTimeout(setupFCM, 1000);
+    return;
+  }
+
+  if (perm === 'denied') {
+    // Browser blocked it — show banner telling user to fix it manually
+    showNotifBanner('blocked');
+    return;
+  }
+
+  // 'default' — never asked yet, show our own prompt first
+  setTimeout(() => showNotifBanner('ask'), 3000);
+}
+
+function showNotifBanner(type) {
+  // Remove any existing banner
+  const old = document.getElementById('notifPermBanner');
+  if (old) old.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'notifPermBanner';
+  banner.style.cssText = `
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    width:calc(100% - 32px); max-width:420px;
+    background:linear-gradient(135deg,#1a1a2e,#16213e);
+    border:1px solid rgba(108,63,214,0.5);
+    border-radius:14px; padding:14px 16px;
+    z-index:9999; box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    display:flex; align-items:center; gap:12px;
+    animation: fadein 0.3s ease;
+  `;
+
+  if (type === 'ask') {
+    banner.innerHTML = `
+      <span style="font-size:26px">🔔</span>
+      <div style="flex:1">
+        <div style="font-weight:800;font-size:13px;color:#fff;">Enable Notifications</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px;">Get instant alerts when new picks drop</div>
+      </div>
+      <button onclick="grantNotifPerm()" style="background:linear-gradient(135deg,#6c3fd6,#a855f7);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">Allow 🔔</button>
+      <button onclick="document.getElementById('notifPermBanner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;padding:0 4px;">✕</button>
+    `;
+  } else {
+    banner.innerHTML = `
+      <span style="font-size:26px">🔕</span>
+      <div style="flex:1">
+        <div style="font-weight:800;font-size:13px;color:#fff;">Notifications Blocked</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px;">Tap the 🔒 in your browser address bar → allow notifications</div>
+      </div>
+      <button onclick="document.getElementById('notifPermBanner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;padding:0 4px;">✕</button>
+    `;
+  }
+
+  document.body.appendChild(banner);
+}
+
+async function grantNotifPerm() {
+  const banner = document.getElementById('notifPermBanner');
+  if (banner) banner.remove();
+
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      showNotif('🔔 Notifications enabled! You\'re all set.', '🔔');
+      setupFCM();
+    } else {
+      showNotifBanner('blocked');
+    }
+  } catch(e) {
+    console.warn('Permission request error:', e);
+  }
 }
 
 function pushNotif(m) {
