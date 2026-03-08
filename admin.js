@@ -269,11 +269,27 @@ function renderHistAdmin() {
       <button class="del-btn" onclick="delHistory(${x.id})">🗑</button>
     </div>`).join('');
 }
-function adminSendNotif() {
+async function adminSendNotif() {
   const m = document.getElementById('notifMsg').value.trim();
   if (!m) return;
+
+  // Save notification to Firebase — all devices with FCM tokens will receive it
+  // via Firebase Cloud Messaging triggered by Cloud Functions or FCM HTTP API
+  if (firebaseReady) {
+    const notifRef = firebase.database().ref('notifications');
+    await notifRef.push({
+      message: m,
+      title: 'VictoryEdge Pro 🏆',
+      sentAt: Date.now(),
+      sentBy: DEVICE_ID
+    });
+    showNotif('✅ Notification sent to all users!', '📣');
+  } else {
+    showNotif('❌ Firebase not connected', '⚠️');
+    return;
+  }
+
+  // Also show locally
   showNotif('📣 ' + m, '📣');
-  pushNotif(m);
   document.getElementById('notifMsg').value = '';
-  showNotif('✅ Notification sent!', '✅');
 }
