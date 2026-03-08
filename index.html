@@ -502,25 +502,29 @@
 <!-- Real-time notification listener — shows broadcast to all open users -->
 <script>
   const _pageLoadTime = Date.now();
-  document.addEventListener('DOMContentLoaded', () => {
-    function startNotifListener() {
-      if (typeof firebase === 'undefined' || !firebase.apps.length) {
-        setTimeout(startNotifListener, 1000); return;
-      }
-      firebase.database().ref('notifications').limitToLast(1).on('child_added', snap => {
-        const notif = snap.val();
-        if (!notif || notif.sentAt < _pageLoadTime) return; // ignore old ones
-        showNotif('📣 ' + notif.message, '📣');
-        if (Notification.permission === 'granted') {
-          new Notification(notif.title || 'VictoryEdge Pro 🏆', {
-            body: notif.message,
-            icon: '/icon-192.png'
-          });
-        }
-      });
+
+  function startNotifListener() {
+    // Wait until firebaseReady flag is set by app.js
+    if (typeof firebaseReady === 'undefined' || !firebaseReady) {
+      setTimeout(startNotifListener, 500); return;
     }
-    setTimeout(startNotifListener, 2000);
-  });
+    firebase.database().ref('notifications').limitToLast(1).on('child_added', snap => {
+      const notif = snap.val();
+      if (!notif) return;
+      // Only react to notifications sent AFTER this page loaded
+      if (notif.sentAt <= _pageLoadTime) return;
+      showNotif('📣 ' + notif.message, '📣');
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification(notif.title || 'VictoryEdge Pro 🏆', {
+          body: notif.message,
+          icon: '/icon-192.png'
+        });
+      }
+    });
+  }
+
+  // Start checking after scripts load
+  window.addEventListener('load', () => setTimeout(startNotifListener, 1000));
 </script>
 
 </body>
