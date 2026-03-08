@@ -459,15 +459,70 @@ function subscribePlan(plan) {
 function openTut()  { document.getElementById('tutModal').classList.add('show'); }
 function closeTut() { document.getElementById('tutModal').classList.remove('show'); }
 
-// ── NOTIFICATIONS ─────────────────────────────────────
-function requestNotifPerm() {
-  if ('Notification' in window && Notification.permission === 'default')
-    setTimeout(() => Notification.requestPermission(), 3000);
+// ── PUSH NOTIFICATIONS (FCM) ──────────────────────────
+// VAPID key from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
+const VAPID_KEY = 'BHEtPHX_yYIvh8jIO7r9jpvWQWn7wisaWFCnK2ZwBLiF-8tv_MoZ-XdCcHkHqqQNNxBn81mGTu-ZcuheO0KjAG0';
+
+let fcmMessaging = null;
+
+async function initPushNotifications() {
+  try {
+    // Register service worker
+    if (!('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    console.log('✅ Service Worker registered');
+
+    // Request permission
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.warn('Push notification permission denied');
+      return;
+    }
+
+    // Init FCM messaging
+    fcmMessaging = firebase.messaging();
+    fcmMessaging.useServiceWorker(reg);
+
+    // Get FCM token for this device
+    const token = await fcmMessaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    if (token) {
+      console.log('✅ FCM Token:', token);
+      // Save token to Firebase so admin can send to all users
+      if (firebaseReady) {
+        firebase.database().ref('fcmTokens/' + DEVICE_ID).set({
+          token: token,
+          device: DEVICE_ID,
+          updated: Date.now()
+        });
+      }
+    }
+
+    // Handle foreground messages (app is open)
+    fcmMessaging.onMessage(payload => {
+      const body = payload.notification?.body || payload.data?.body || '';
+      const title = payload.notification?.title || 'VictoryEdge Pro';
+      showNotif('📣 ' + body, '📣');
+      // Also show native notification even when app is open
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body, icon: '/icon-192.png' });
+      }
+    });
+
+  } catch (err) {
+    console.warn('Push notification setup failed:', err.message);
+  }
 }
+
+function requestNotifPerm() {
+  setTimeout(() => initPushNotifications(), 3000);
+}
+
+// Legacy local notification (in-app toast only)
 function pushNotif(m) {
   if ('Notification' in window && Notification.permission === 'granted')
-    new Notification('VictoryEdge Pro', { body: m });
+    new Notification('VictoryEdge Pro', { body: m, icon: '/icon-192.png' });
 }
+
 function showNotif(m, i = '⚽') {
   document.getElementById('notifIcon').textContent = i;
   document.getElementById('notifTxt').textContent  = m;
