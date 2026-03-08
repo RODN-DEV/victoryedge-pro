@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VictoryEdge Pro – Daily Sports Predictions</title>
 <meta name="description" content="Professional football predictions with 87% win rate. Free daily tips + VIP premium picks.">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#6c3fd6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -124,14 +128,14 @@
   <div class="ticker-track">
     <span>⚽ Free tips won ✅✅ silver won✅✅ gold won won ✅✅✅</span>
     <span>🔥 Best analysis to the 🙌✌️</span>
-    <span>💎 Crewe U21 vs Wigan U21 — BTTS &over 2.5 @ 2.83</span>
-    <span>⭐ 7-Fold Mega ACCA — Total Odds 15.38</span>
-    <span>✅ Gil Vicente vs Benfica — Away Win @ 1.55</span>
-    <span>🏆 VictoryEdge Pro — 87% Win Rate!</span>
+    <span>💎 Daily winning tips</span>
+    <span>⭐ 7-Fold Mega ACCA — Total Odds 30+ odds all tips</span>
+    <span>✅ Discount talk to admin</span>
+    <span>🏆 VictoryEdge Pro — 80% Win Rate!</span>
     <span>⚽ Join us now in the diamond</span>
     <span>🔥 get access to all plans </span>
     <span>💎 Dont miss winning odds daily 💥🎉🎉</span>
-    <span>⭐ 7-Fold Mega ACCA — Total Odds 15.38</span>
+    <span>⭐ 7-Fold Mega ACCA — Total Odds 10+ daily</span>
     <span>✅ Congratulations and big victory yesterday 💥🎉✅✅✅</span>
     <span>🏆 VictoryEdge Pro — 87% Win Rate!</span>
   </div>
@@ -486,13 +490,37 @@
 </div><!-- /#adminPanel -->
 
 <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
 
 <!-- App scripts (order matters) -->
 <script src="firebase-config.js"></script>
 <script src="app.js"></script>
 <script src="admin.js"></script>
+
+<!-- Listen for new notifications pushed by admin -->
+<script>
+  // When admin sends a notification to Firebase, all open app instances show it
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase !== 'undefined' && firebase.database) {
+      firebase.database().ref('notifications').limitToLast(1).on('child_added', snap => {
+        const notif = snap.val();
+        if (!notif) return;
+        // Only show if sent in last 30 seconds (not old ones on page load)
+        if (Date.now() - notif.sentAt < 30000) {
+          showNotif('📣 ' + notif.message, '📣');
+          if (Notification.permission === 'granted') {
+            new Notification(notif.title || 'VictoryEdge Pro', {
+              body: notif.message,
+              icon: '/icon-192.png'
+            });
+          }
+        }
+      });
+    }
+  });
+</script>
 
 </body>
 </html>
