@@ -271,25 +271,24 @@ function renderHistAdmin() {
 }
 async function adminSendNotif() {
   const m = document.getElementById('notifMsg').value.trim();
-  if (!m) return;
+  if (!m) { showNotif('⚠️ Type a message first', '⚠️'); return; }
 
-  // Save notification to Firebase — all devices with FCM tokens will receive it
-  // via Firebase Cloud Messaging triggered by Cloud Functions or FCM HTTP API
-  if (firebaseReady) {
-    const notifRef = firebase.database().ref('notifications');
-    await notifRef.push({
+  if (!firebaseReady) { showNotif('❌ Firebase not connected', '⚠️'); return; }
+
+  try {
+    await firebase.database().ref('notifications').push({
       message: m,
       title: 'VictoryEdge Pro 🏆',
       sentAt: Date.now(),
       sentBy: DEVICE_ID
     });
-    showNotif('✅ Notification sent to all users!', '📣');
-  } else {
-    showNotif('❌ Firebase not connected', '⚠️');
-    return;
+    document.getElementById('notifMsg').value = '';
+    showNotif('✅ Broadcast sent to all users!', '📣');
+    // Show local native notification too
+    if (Notification.permission === 'granted') {
+      new Notification('VictoryEdge Pro 🏆', { body: m, icon: '/icon-192.png' });
+    }
+  } catch(e) {
+    showNotif('❌ Failed: ' + e.message, '⚠️');
   }
-
-  // Also show locally
-  showNotif('📣 ' + m, '📣');
-  document.getElementById('notifMsg').value = '';
 }
