@@ -460,56 +460,41 @@ function openTut()  { document.getElementById('tutModal').classList.add('show');
 function closeTut() { document.getElementById('tutModal').classList.remove('show'); }
 
 // ── PUSH NOTIFICATIONS (FCM) ──────────────────────────
-// VAPID key from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
 const VAPID_KEY = 'BHEtPHX_yYIvh8jIO7r9jpvWQWn7wisaWFCnK2ZwBLiF-8tv_MoZ-XdCcHkHqqQNNxBn81mGTu-ZcuheO0KjAG0';
-
-let fcmMessaging = null;
 
 async function initPushNotifications() {
   try {
+    if (!('serviceWorker' in navigator)) { console.warn('SW not supported'); return; }
+
     // Register service worker
-    if (!('serviceWorker' in navigator)) return;
     const reg = await navigator.serviceWorker.register('/sw.js');
-    console.log('✅ Service Worker registered');
+    await navigator.serviceWorker.ready;
+    console.log('✅ Service Worker ready');
 
     // Request permission
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      console.warn('Push notification permission denied');
-      return;
+    if (permission !== 'granted') { console.warn('Notification permission denied'); return; }
+
+    // Init FCM
+    const messaging = firebase.messaging();
+
+    // Get token
+    const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    if (token && firebaseReady) {
+      firebase.database().ref('fcmTokens/' + DEVICE_ID).set({ token, device: DEVICE_ID, updated: Date.now() });
+      console.log('✅ FCM ready');
     }
 
-    // Init FCM messaging
-    fcmMessaging = firebase.messaging();
-    fcmMessaging.useServiceWorker(reg);
-
-    // Get FCM token for this device
-    const token = await fcmMessaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
-    if (token) {
-      console.log('✅ FCM Token:', token);
-      // Save token to Firebase so admin can send to all users
-      if (firebaseReady) {
-        firebase.database().ref('fcmTokens/' + DEVICE_ID).set({
-          token: token,
-          device: DEVICE_ID,
-          updated: Date.now()
-        });
-      }
-    }
-
-    // Handle foreground messages (app is open)
-    fcmMessaging.onMessage(payload => {
-      const body = payload.notification?.body || payload.data?.body || '';
+    // Foreground messages (app open)
+    messaging.onMessage(payload => {
+      const body = payload.notification?.body || payload.data?.message || '';
       const title = payload.notification?.title || 'VictoryEdge Pro';
       showNotif('📣 ' + body, '📣');
-      // Also show native notification even when app is open
-      if (Notification.permission === 'granted') {
-        new Notification(title, { body, icon: '/icon-192.png' });
-      }
+      new Notification(title, { body, icon: '/icon-192.png' });
     });
 
-  } catch (err) {
-    console.warn('Push notification setup failed:', err.message);
+  } catch(err) {
+    console.warn('Push setup error:', err.message);
   }
 }
 
@@ -517,9 +502,8 @@ function requestNotifPerm() {
   setTimeout(() => initPushNotifications(), 3000);
 }
 
-// Legacy local notification (in-app toast only)
 function pushNotif(m) {
-  if ('Notification' in window && Notification.permission === 'granted')
+  if (Notification.permission === 'granted')
     new Notification('VictoryEdge Pro', { body: m, icon: '/icon-192.png' });
 }
 
