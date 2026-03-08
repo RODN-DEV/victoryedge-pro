@@ -126,18 +126,18 @@
 <!-- TICKER -->
 <div class="ticker-wrap">
   <div class="ticker-track">
-    <span>⚽ Free tips won ✅✅ silver won✅✅ gold won won ✅✅✅</span>
-    <span>🔥 Best analysis to the 🙌✌️</span>
-    <span>💎 Daily winning tips</span>
-    <span>⭐ 7-Fold Mega ACCA — Total Odds 30+ odds all tips</span>
-    <span>✅ Discount talk to admin</span>
-    <span>🏆 VictoryEdge Pro — 80% Win Rate!</span>
-    <span>⚽ Join us now in the diamond</span>
-    <span>🔥 get access to all plans </span>
-    <span>💎 Dont miss winning odds daily 💥🎉🎉</span>
-    <span>⭐ 7-Fold Mega ACCA — Total Odds 10+ daily</span>
-    <span>✅ Congratulations and big victory yesterday 💥🎉✅✅✅</span>
-    <span>🏆 VictoryEdge Pro — 87% Win Rate!</span>
+    <span>🏆 VictoryEdge Pro — The #1 Sports Prediction Platform</span>
+    <span>🔥 87% Win Rate Verified Across All Plans</span>
+    <span>💎 Diamond Members Cashed Out Big Last Night — Join Now!</span>
+    <span>⚽ New Picks Drop Daily — Don't Miss Tonight's Games</span>
+    <span>✅ Gold Plan Members — Your Picks Are Live Right Now</span>
+    <span>🚀 Upgrade Today & Start Winning With The Pros</span>
+    <span>💰 Real Odds. Real Wins. Real Money — VictoryEdge Pro</span>
+    <span>🎯 Expert Analysis Behind Every Single Pick We Post</span>
+    <span>⭐ Silver & Gold Members Won Big This Weekend — Be Next</span>
+    <span>🔐 Exclusive VIP Picks Available — Upgrade Your Plan Now</span>
+    <span>📲 Send Your Device ID To Telegram To Activate Your Plan</span>
+    <span>🏅 Trusted By Hundreds Of Winners Worldwide</span>
   </div>
 </div>
 
@@ -499,26 +499,27 @@
 <script src="app.js"></script>
 <script src="admin.js"></script>
 
-<!-- Listen for new notifications pushed by admin -->
+<!-- Real-time notification listener — shows broadcast to all open users -->
 <script>
-  // When admin sends a notification to Firebase, all open app instances show it
+  const _pageLoadTime = Date.now();
   document.addEventListener('DOMContentLoaded', () => {
-    if (typeof firebase !== 'undefined' && firebase.database) {
+    function startNotifListener() {
+      if (typeof firebase === 'undefined' || !firebase.apps.length) {
+        setTimeout(startNotifListener, 1000); return;
+      }
       firebase.database().ref('notifications').limitToLast(1).on('child_added', snap => {
         const notif = snap.val();
-        if (!notif) return;
-        // Only show if sent in last 30 seconds (not old ones on page load)
-        if (Date.now() - notif.sentAt < 30000) {
-          showNotif('📣 ' + notif.message, '📣');
-          if (Notification.permission === 'granted') {
-            new Notification(notif.title || 'VictoryEdge Pro', {
-              body: notif.message,
-              icon: '/icon-192.png'
-            });
-          }
+        if (!notif || notif.sentAt < _pageLoadTime) return; // ignore old ones
+        showNotif('📣 ' + notif.message, '📣');
+        if (Notification.permission === 'granted') {
+          new Notification(notif.title || 'VictoryEdge Pro 🏆', {
+            body: notif.message,
+            icon: '/icon-192.png'
+          });
         }
       });
     }
+    setTimeout(startNotifListener, 2000);
   });
 </script>
 
